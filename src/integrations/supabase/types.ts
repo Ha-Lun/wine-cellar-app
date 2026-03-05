@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      drunk_wines: {
+        Row: {
+          country: string | null
+          created_at: string
+          drink_from: number | null
+          drink_until: number | null
+          drunk_at: string
+          food_pairings: string[] | null
+          grape_variety: string | null
+          id: string
+          image_url: string | null
+          name: string
+          notes: string | null
+          original_created_at: string | null
+          quantity: number
+          rating: number | null
+          region: string | null
+          type: Database["public"]["Enums"]["wine_type"]
+          user_id: string
+          vintage: number | null
+          winery: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          drink_from?: number | null
+          drink_until?: number | null
+          drunk_at?: string
+          food_pairings?: string[] | null
+          grape_variety?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          notes?: string | null
+          original_created_at?: string | null
+          quantity?: number
+          rating?: number | null
+          region?: string | null
+          type?: Database["public"]["Enums"]["wine_type"]
+          user_id: string
+          vintage?: number | null
+          winery?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          drink_from?: number | null
+          drink_until?: number | null
+          drunk_at?: string
+          food_pairings?: string[] | null
+          grape_variety?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          notes?: string | null
+          original_created_at?: string | null
+          quantity?: number
+          rating?: number | null
+          region?: string | null
+          type?: Database["public"]["Enums"]["wine_type"]
+          user_id?: string
+          vintage?: number | null
+          winery?: string | null
+        }
+        Relationships: []
+      }
       wines: {
         Row: {
           country: string | null

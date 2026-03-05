@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchWines, deleteWine } from "@/lib/wines";
+import { fetchWines, deleteWine, markWineAsDrunk } from "@/lib/wines";
 import { WineType } from "@/types/wine";
 import { WineCard } from "@/components/WineCard";
 import { AddWineDialog } from "@/components/AddWineDialog";
@@ -8,9 +8,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { AuthForm } from "@/components/AuthForm";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wine, LogOut, Loader2, GlassWater } from "lucide-react";
+import { Wine, LogOut, Loader2, GlassWater, Archive } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const typeFilters: { value: WineType | "all"; label: string }[] = [
   { value: "all", label: "All Wines" },
@@ -37,6 +38,15 @@ const Index = () => {
       toast.success("Wine removed from cellar");
     },
     onError: () => toast.error("Failed to remove wine"),
+  });
+
+  const drunkMutation = useMutation({
+    mutationFn: markWineAsDrunk,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wines"] });
+      toast.success("Wine moved to archive – cheers! 🍷");
+    },
+    onError: () => toast.error("Failed to archive wine"),
   });
 
   if (authLoading) {
@@ -77,6 +87,9 @@ const Index = () => {
           </div>
           <div className="flex items-center gap-2">
             <AddWineDialog onAdded={() => queryClient.invalidateQueries({ queryKey: ["wines"] })} />
+            <Button variant="ghost" size="icon" asChild title="Wine Archive">
+              <Link to="/archive"><Archive className="w-4 h-4" /></Link>
+            </Button>
             <Button variant="ghost" size="icon" onClick={() => signOut()}>
               <LogOut className="w-4 h-4" />
             </Button>
@@ -129,6 +142,7 @@ const Index = () => {
                 key={wine.id}
                 wine={wine}
                 onDelete={(id) => deleteMutation.mutate(id)}
+                onMarkDrunk={(id) => drunkMutation.mutate(id)}
                 index={i}
               />
             ))}
