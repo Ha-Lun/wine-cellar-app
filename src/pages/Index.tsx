@@ -1,12 +1,140 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchWines, deleteWine } from "@/lib/wines";
+import { WineType } from "@/types/wine";
+import { WineCard } from "@/components/WineCard";
+import { AddWineDialog } from "@/components/AddWineDialog";
+import { useAuth } from "@/hooks/useAuth";
+import { AuthForm } from "@/components/AuthForm";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Wine, LogOut, Loader2, GlassWater } from "lucide-react";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
+
+const typeFilters: { value: WineType | "all"; label: string }[] = [
+  { value: "all", label: "All Wines" },
+  { value: "red", label: "Red" },
+  { value: "white", label: "White" },
+  { value: "champagne", label: "Champagne" },
+];
 
 const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+  const { user, loading: authLoading, signOut } = useAuth();
+  const [filter, setFilter] = useState<WineType | "all">("all");
+  const queryClient = useQueryClient();
+
+  const { data: wines = [], isLoading } = useQuery({
+    queryKey: ["wines"],
+    queryFn: fetchWines,
+    enabled: !!user,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteWine,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wines"] });
+      toast.success("Wine removed from cellar");
+    },
+    onError: () => toast.error("Failed to remove wine"),
+  });
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  if (!user) return <AuthForm />;
+
+  const filteredWines = filter === "all" ? wines : wines.filter((w) => w.type === filter);
+
+  const drinkNowCount = wines.filter((w) => {
+    const year = new Date().getFullYear();
+    return w.drink_from && w.drink_until && year >= w.drink_from && year <= w.drink_until;
+  }).length;
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+              <Wine className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-heading text-xl font-bold leading-tight">Wine Cellar</h1>
+              <p className="text-xs text-muted-foreground">
+                {wines.length} bottle{wines.length !== 1 ? "s" : ""}
+                {drinkNowCount > 0 && (
+                  <span> · <span className="text-primary">{drinkNowCount} ready to drink</span></span>
+                )}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <AddWineDialog onAdded={() => queryClient.invalidateQueries({ queryKey: ["wines"] })} />
+            <Button variant="ghost" size="icon" onClick={() => signOut()}>
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="container max-w-4xl mx-auto px-4 py-6">
+        {/* Filters */}
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {typeFilters.map((f) => (
+            <Button
+              key={f.value}
+              variant={filter === f.value ? "default" : "secondary"}
+              size="sm"
+              onClick={() => setFilter(f.value)}
+            >
+              {f.label}
+              {f.value !== "all" && (
+                <Badge variant="outline" className="ml-1.5 text-xs">
+                  {wines.filter((w) => f.value === "all" || w.type === f.value).length}
+                </Badge>
+              )}
+            </Button>
+          ))}
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : filteredWines.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-20"
+          >
+            <GlassWater className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+            <h2 className="font-heading text-xl text-muted-foreground mb-2">
+              {wines.length === 0 ? "Your cellar is empty" : "No wines match this filter"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {wines.length === 0 ? "Add your first wine by scanning a label or entering details manually." : "Try a different filter."}
+            </p>
+          </motion.div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {filteredWines.map((wine, i) => (
+              <WineCard
+                key={wine.id}
+                wine={wine}
+                onDelete={(id) => deleteMutation.mutate(id)}
+                index={i}
+              />
+            ))}
+          </div>
+        )}
+      </main>
     </div>
   );
 };
