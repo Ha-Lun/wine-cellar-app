@@ -1,6 +1,6 @@
 import { Wine, WineType } from "@/types/wine";
 import { motion } from "framer-motion";
-import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed } from "lucide-react";
+import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed, WineOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -13,10 +13,11 @@ const typeConfig: Record<WineType, { label: string; className: string }> = {
 interface WineCardProps {
   wine: Wine;
   onDelete: (id: string) => void;
+  onMarkDrunk: (id: string) => void;
   index: number;
 }
 
-export function WineCard({ wine, onDelete, index }: WineCardProps) {
+export function WineCard({ wine, onDelete, onMarkDrunk, index }: WineCardProps) {
   const config = typeConfig[wine.type];
   const currentYear = new Date().getFullYear();
   const isOptimalNow =
@@ -95,14 +96,26 @@ export function WineCard({ wine, onDelete, index }: WineCardProps) {
         </p>
       )}
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-        onClick={() => onDelete(wine.id)}
-      >
-        <Trash2 className="w-4 h-4" />
-      </Button>
+      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-primary"
+          onClick={() => onMarkDrunk(wine.id)}
+          title="Mark as drunk"
+        >
+          <WineOff className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-destructive"
+          onClick={() => onDelete(wine.id)}
+          title="Delete"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
     </motion.div>
   );
 }
