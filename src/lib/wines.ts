@@ -63,6 +63,10 @@ export async function markWineAsDrunk(wineId: string) {
       image_url: wine.image_url,
       drink_from: wine.drink_from,
       drink_until: wine.drink_until,
+      body: wine.body,
+      tannin: wine.tannin,
+      sweetness: wine.sweetness,
+      acidity: wine.acidity,
       quantity: 1,
       original_created_at: wine.created_at,
     });

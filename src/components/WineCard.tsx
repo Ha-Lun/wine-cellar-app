@@ -94,6 +94,21 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
         </div>
       )}
 
+      {/* Rating display */}
+      {wine.rating && (
+        <div className="mt-2 flex items-center gap-1">
+          {Array.from({ length: 10 }, (_, i) => (
+            <Star
+              key={i}
+              className={`w-3 h-3 ${
+                i < wine.rating! ? "fill-primary text-primary" : "text-muted-foreground/20"
+              }`}
+            />
+          ))}
+          <span className="ml-1 text-xs text-muted-foreground">{wine.rating}/10</span>
+        </div>
+      )}
+
       {wine.notes && (
         <p className="mt-2 text-sm text-muted-foreground italic line-clamp-2">
           "{wine.notes}"
@@ -101,6 +116,15 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
       )}
 
       <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-primary"
+          onClick={() => setRatingOpen(true)}
+          title="Rate wine"
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+        </Button>
         <Button
           variant="ghost"
           size="icon"
@@ -120,6 +144,13 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
           <Trash2 className="w-4 h-4" />
         </Button>
       </div>
+
+      <WineRatingDialog
+        wine={wine}
+        open={ratingOpen}
+        onOpenChange={setRatingOpen}
+        onUpdated={onUpdated}
+      />
     </motion.div>
   );
 }
