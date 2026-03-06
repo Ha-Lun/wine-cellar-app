@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       drunk_wines: {
         Row: {
+          acidity: number | null
+          body: number | null
           country: string | null
           created_at: string
           drink_from: number | null
@@ -31,12 +33,16 @@ export type Database = {
           quantity: number
           rating: number | null
           region: string | null
+          sweetness: number | null
+          tannin: number | null
           type: Database["public"]["Enums"]["wine_type"]
           user_id: string
           vintage: number | null
           winery: string | null
         }
         Insert: {
+          acidity?: number | null
+          body?: number | null
           country?: string | null
           created_at?: string
           drink_from?: number | null
@@ -52,12 +58,16 @@ export type Database = {
           quantity?: number
           rating?: number | null
           region?: string | null
+          sweetness?: number | null
+          tannin?: number | null
           type?: Database["public"]["Enums"]["wine_type"]
           user_id: string
           vintage?: number | null
           winery?: string | null
         }
         Update: {
+          acidity?: number | null
+          body?: number | null
           country?: string | null
           created_at?: string
           drink_from?: number | null
@@ -73,6 +83,8 @@ export type Database = {
           quantity?: number
           rating?: number | null
           region?: string | null
+          sweetness?: number | null
+          tannin?: number | null
           type?: Database["public"]["Enums"]["wine_type"]
           user_id?: string
           vintage?: number | null
@@ -82,6 +94,8 @@ export type Database = {
       }
       wines: {
         Row: {
+          acidity: number | null
+          body: number | null
           country: string | null
           created_at: string
           drink_from: number | null
@@ -95,6 +109,8 @@ export type Database = {
           quantity: number
           rating: number | null
           region: string | null
+          sweetness: number | null
+          tannin: number | null
           type: Database["public"]["Enums"]["wine_type"]
           updated_at: string
           user_id: string
@@ -102,6 +118,8 @@ export type Database = {
           winery: string | null
         }
         Insert: {
+          acidity?: number | null
+          body?: number | null
           country?: string | null
           created_at?: string
           drink_from?: number | null
@@ -115,6 +133,8 @@ export type Database = {
           quantity?: number
           rating?: number | null
           region?: string | null
+          sweetness?: number | null
+          tannin?: number | null
           type?: Database["public"]["Enums"]["wine_type"]
           updated_at?: string
           user_id: string
@@ -122,6 +142,8 @@ export type Database = {
           winery?: string | null
         }
         Update: {
+          acidity?: number | null
+          body?: number | null
           country?: string | null
           created_at?: string
           drink_from?: number | null
@@ -135,6 +157,8 @@ export type Database = {
           quantity?: number
           rating?: number | null
           region?: string | null
+          sweetness?: number | null
+          tannin?: number | null
           type?: Database["public"]["Enums"]["wine_type"]
           updated_at?: string
           user_id?: string

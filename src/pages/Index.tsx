@@ -143,6 +143,7 @@ const Index = () => {
                 wine={wine}
                 onDelete={(id) => deleteMutation.mutate(id)}
                 onMarkDrunk={(id) => drunkMutation.mutate(id)}
+                onUpdated={() => queryClient.invalidateQueries({ queryKey: ["wines"] })}
                 index={i}
               />
             ))}

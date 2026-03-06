@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Wine, WineType } from "@/types/wine";
 import { motion } from "framer-motion";
-import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed, WineOff } from "lucide-react";
+import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed, WineOff, Star, SlidersHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { WineRatingDialog } from "@/components/WineRatingDialog";
 
 const typeConfig: Record<WineType, { label: string; className: string }> = {
   red: { label: "Red", className: "bg-wine-red text-primary-foreground" },
@@ -14,10 +16,12 @@ interface WineCardProps {
   wine: Wine;
   onDelete: (id: string) => void;
   onMarkDrunk: (id: string) => void;
+  onUpdated: () => void;
   index: number;
 }
 
-export function WineCard({ wine, onDelete, onMarkDrunk, index }: WineCardProps) {
+export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: WineCardProps) {
+  const [ratingOpen, setRatingOpen] = useState(false);
   const config = typeConfig[wine.type];
   const currentYear = new Date().getFullYear();
   const isOptimalNow =
@@ -90,6 +94,21 @@ export function WineCard({ wine, onDelete, onMarkDrunk, index }: WineCardProps) 
         </div>
       )}
 
+      {/* Rating display */}
+      {wine.rating && (
+        <div className="mt-2 flex items-center gap-1">
+          {Array.from({ length: 10 }, (_, i) => (
+            <Star
+              key={i}
+              className={`w-3 h-3 ${
+                i < wine.rating! ? "fill-primary text-primary" : "text-muted-foreground/20"
+              }`}
+            />
+          ))}
+          <span className="ml-1 text-xs text-muted-foreground">{wine.rating}/10</span>
+        </div>
+      )}
+
       {wine.notes && (
         <p className="mt-2 text-sm text-muted-foreground italic line-clamp-2">
           "{wine.notes}"
@@ -97,6 +116,15 @@ export function WineCard({ wine, onDelete, onMarkDrunk, index }: WineCardProps) 
       )}
 
       <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-primary"
+          onClick={() => setRatingOpen(true)}
+          title="Rate wine"
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+        </Button>
         <Button
           variant="ghost"
           size="icon"
@@ -116,6 +144,13 @@ export function WineCard({ wine, onDelete, onMarkDrunk, index }: WineCardProps) 
           <Trash2 className="w-4 h-4" />
         </Button>
       </div>
+
+      <WineRatingDialog
+        wine={wine}
+        open={ratingOpen}
+        onOpenChange={setRatingOpen}
+        onUpdated={onUpdated}
+      />
     </motion.div>
   );
 }
