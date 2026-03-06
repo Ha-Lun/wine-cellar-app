@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Wine, WineType } from "@/types/wine";
 import { motion } from "framer-motion";
-import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed, WineOff } from "lucide-react";
+import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed, WineOff, Star, SlidersHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { WineRatingDialog } from "@/components/WineRatingDialog";
 
 const typeConfig: Record<WineType, { label: string; className: string }> = {
   red: { label: "Red", className: "bg-wine-red text-primary-foreground" },
