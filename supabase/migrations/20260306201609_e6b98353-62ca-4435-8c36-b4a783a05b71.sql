@@ -1,0 +1,1 @@
+CREATE POLICY "Users can update their own drunk wines" ON public.drunk_wines FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);

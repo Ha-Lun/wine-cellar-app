@@ -1,15 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchDrunkWines } from "@/lib/wines";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthForm } from "@/components/AuthForm";
 import { Badge } from "@/components/ui/badge";
-import { Wine, Loader2, GlassWater, ArrowLeft } from "lucide-react";
+import { Wine, Loader2, GlassWater, ArrowLeft, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { WineType } from "@/types/wine";
 import { format } from "date-fns";
 import { Grape, Calendar } from "lucide-react";
+import { WineRatingDialog } from "@/components/WineRatingDialog";
 
 const typeConfig: Record<WineType, { label: string; className: string }> = {
   red: { label: "Red", className: "bg-wine-red text-primary-foreground" },
@@ -19,6 +21,8 @@ const typeConfig: Record<WineType, { label: string; className: string }> = {
 
 const Archive = () => {
   const { user, loading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
+  const [ratingWine, setRatingWine] = useState<any>(null);
 
   const { data: drunkWines = [], isLoading } = useQuery({
     queryKey: ["drunk-wines"],
@@ -75,7 +79,7 @@ const Archive = () => {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05, duration: 0.3 }}
-                  className="rounded-lg border border-border bg-card p-5"
+                  className="group relative rounded-lg border border-border bg-card p-5 pb-12"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
@@ -103,15 +107,54 @@ const Archive = () => {
                     <Calendar className="w-3.5 h-3.5" />
                     <span>Enjoyed {format(new Date(wine.drunk_at), "MMM d, yyyy")}</span>
                   </div>
+                  {wine.rating && (
+                    <div className="mt-2 flex items-center gap-1">
+                      {Array.from({ length: 10 }, (_, j) => (
+                        <Star
+                          key={j}
+                          className={`w-3 h-3 ${
+                            j < wine.rating! ? "fill-primary text-primary" : "text-muted-foreground/20"
+                          }`}
+                        />
+                      ))}
+                      <span className="ml-1 text-xs text-muted-foreground">{wine.rating}/10</span>
+                    </div>
+                  )}
                   {wine.notes && (
                     <p className="mt-2 text-sm text-muted-foreground italic line-clamp-2">"{wine.notes}"</p>
                   )}
+
+                  {/* Rate button - bottom left */}
+                  <div className="absolute bottom-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={() => setRatingWine(wine)}
+                      title="Rate wine"
+                    >
+                      <Star className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </motion.div>
               );
             })}
           </div>
         )}
       </main>
+
+      {ratingWine && (
+        <WineRatingDialog
+          wine={ratingWine}
+          open={!!ratingWine}
+          onOpenChange={(open) => { if (!open) setRatingWine(null); }}
+          onUpdated={() => {
+            setRatingWine(null);
+            queryClient.invalidateQueries({ queryKey: ["drunk-wines"] });
+          }}
+          table="drunk_wines"
+        />
+      )}
     </div>
   );
 };
