@@ -16,10 +16,12 @@ interface WineCardProps {
   wine: Wine;
   onDelete: (id: string) => void;
   onMarkDrunk: (id: string) => void;
+  onUpdated: () => void;
   index: number;
 }
 
-export function WineCard({ wine, onDelete, onMarkDrunk, index }: WineCardProps) {
+export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: WineCardProps) {
+  const [ratingOpen, setRatingOpen] = useState(false);
   const config = typeConfig[wine.type];
   const currentYear = new Date().getFullYear();
   const isOptimalNow =
