@@ -10,13 +10,15 @@ import { Star, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface WineRatingDialogProps {
-  wine: Wine;
+  wine: Wine | { id: string; name: string; rating?: number | null; body?: number | null; tannin?: number | null; sweetness?: number | null; acidity?: number | null; notes?: string | null };
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdated: () => void;
+  markAsDrunk?: boolean;
+  table?: "wines" | "drunk_wines";
 }
 
-export function WineRatingDialog({ wine, open, onOpenChange, onUpdated }: WineRatingDialogProps) {
+export function WineRatingDialog({ wine, open, onOpenChange, onUpdated, markAsDrunk, table = "wines" }: WineRatingDialogProps) {
   const [rating, setRating] = useState(wine.rating || 0);
   const [hoverRating, setHoverRating] = useState(0);
   const [body, setBody] = useState(wine.body ?? 5);
@@ -29,14 +31,26 @@ export function WineRatingDialog({ wine, open, onOpenChange, onUpdated }: WineRa
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateWine(wine.id, {
+      const updates = {
         rating: rating || null,
         body,
         tannin,
         sweetness,
         acidity,
         notes: notes || null,
-      });
+      };
+
+      if (table === "drunk_wines") {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { error } = await supabase
+          .from("drunk_wines")
+          .update(updates)
+          .eq("id", wine.id);
+        if (error) throw error;
+      } else {
+        await updateWine(wine.id, updates);
+      }
+
       toast.success("Rating saved!");
       onOpenChange(false);
       onUpdated();
@@ -52,12 +66,11 @@ export function WineRatingDialog({ wine, open, onOpenChange, onUpdated }: WineRa
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg">
-            Rate: {wine.name}
+            {markAsDrunk ? "Rate & Archive" : "Rate"}: {wine.name}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 mt-2">
-          {/* Star rating 1-10 */}
           <div>
             <Label className="mb-2 block">Rating</Label>
             <div className="flex items-center gap-1">
@@ -85,7 +98,6 @@ export function WineRatingDialog({ wine, open, onOpenChange, onUpdated }: WineRa
             </div>
           </div>
 
-          {/* Taste profile scales */}
           <div className="space-y-4">
             <Label className="block">Taste Profile</Label>
             <TasteScale leftLabel="Light" rightLabel="Bold" value={body} onChange={setBody} />
@@ -94,7 +106,6 @@ export function WineRatingDialog({ wine, open, onOpenChange, onUpdated }: WineRa
             <TasteScale leftLabel="Soft" rightLabel="Acidic" value={acidity} onChange={setAcidity} />
           </div>
 
-          {/* Tasting notes */}
           <div>
             <Label htmlFor="tasting-notes">Tasting Notes</Label>
             <Textarea
@@ -109,7 +120,7 @@ export function WineRatingDialog({ wine, open, onOpenChange, onUpdated }: WineRa
 
           <Button onClick={handleSave} disabled={saving} className="w-full">
             {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-            Save Rating
+            {markAsDrunk ? "Save & Archive" : "Save Rating"}
           </Button>
         </div>
       </DialogContent>
