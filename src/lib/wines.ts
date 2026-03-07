@@ -93,30 +93,49 @@ export async function restoreToCellar(drunkWineId: string) {
     .single();
   if (fetchError) throw fetchError;
 
-  const { error: insertError } = await supabase
+  // Check for an existing matching wine in the cellar
+  const { data: existing } = await supabase
     .from("wines")
-    .insert({
-      user_id: wine.user_id,
-      name: wine.name,
-      winery: wine.winery,
-      region: wine.region,
-      country: wine.country,
-      vintage: wine.vintage,
-      type: wine.type,
-      grape_variety: wine.grape_variety,
-      notes: wine.notes,
-      food_pairings: wine.food_pairings,
-      rating: wine.rating,
-      image_url: wine.image_url,
-      drink_from: wine.drink_from,
-      drink_until: wine.drink_until,
-      body: wine.body,
-      tannin: wine.tannin,
-      sweetness: wine.sweetness,
-      acidity: wine.acidity,
-      quantity: wine.quantity,
-    });
-  if (insertError) throw insertError;
+    .select("id, quantity")
+    .eq("user_id", wine.user_id)
+    .eq("name", wine.name)
+    .eq("type", wine.type)
+    .is("vintage", wine.vintage ?? null)
+    .is("winery", wine.winery ?? null)
+    .maybeSingle();
+
+  if (existing) {
+    const { error: updateError } = await supabase
+      .from("wines")
+      .update({ quantity: existing.quantity + (wine.quantity || 1) })
+      .eq("id", existing.id);
+    if (updateError) throw updateError;
+  } else {
+    const { error: insertError } = await supabase
+      .from("wines")
+      .insert({
+        user_id: wine.user_id,
+        name: wine.name,
+        winery: wine.winery,
+        region: wine.region,
+        country: wine.country,
+        vintage: wine.vintage,
+        type: wine.type,
+        grape_variety: wine.grape_variety,
+        notes: wine.notes,
+        food_pairings: wine.food_pairings,
+        rating: wine.rating,
+        image_url: wine.image_url,
+        drink_from: wine.drink_from,
+        drink_until: wine.drink_until,
+        body: wine.body,
+        tannin: wine.tannin,
+        sweetness: wine.sweetness,
+        acidity: wine.acidity,
+        quantity: wine.quantity,
+      });
+    if (insertError) throw insertError;
+  }
 
   const { error: deleteError } = await supabase
     .from("drunk_wines")
