@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { Grape, Calendar } from "lucide-react";
 import { WineRatingDialog } from "@/components/WineRatingDialog";
 import { EditWineDialog } from "@/components/EditWineDialog";
+import { WineFilters } from "@/components/WineFilters";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -27,6 +28,7 @@ const Archive = () => {
   const queryClient = useQueryClient();
   const [ratingWine, setRatingWine] = useState<any>(null);
   const [editWine, setEditWine] = useState<any>(null);
+  const [filteredWines, setFilteredWines] = useState<any[] | null>(null);
 
   const { data: drunkWines = [], isLoading } = useQuery({
     queryKey: ["drunk-wines"],
@@ -81,6 +83,10 @@ const Archive = () => {
               </p>
             </div>
           </div>
+          <WineFilters
+            wines={drunkWines}
+            onFilteredWines={(f) => setFilteredWines(f.length === drunkWines.length ? null : f)}
+          />
         </div>
       </header>
 
@@ -97,7 +103,7 @@ const Archive = () => {
           </motion.div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
-            {drunkWines.map((wine, i) => {
+            {(filteredWines ?? drunkWines).map((wine, i) => {
               const config = typeConfig[wine.type as WineType];
               return (
                 <motion.div

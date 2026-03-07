@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchWines, deleteWine, markWineAsDrunk } from "@/lib/wines";
 import { WineType } from "@/types/wine";
 import { WineCard } from "@/components/WineCard";
 import { AddWineDialog } from "@/components/AddWineDialog";
+import { WineFilters } from "@/components/WineFilters";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthForm } from "@/components/AuthForm";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ const typeFilters: { value: WineType | "all"; label: string }[] = [
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const [filter, setFilter] = useState<WineType | "all">("all");
+  const [customFiltered, setCustomFiltered] = useState<any[] | null>(null);
   const queryClient = useQueryClient();
 
   const { data: wines = [], isLoading } = useQuery({
@@ -59,7 +61,8 @@ const Index = () => {
 
   if (!user) return <AuthForm />;
 
-  const filteredWines = filter === "all" ? wines : wines.filter((w) => w.type === filter);
+  const baseWines = customFiltered ?? wines;
+  const filteredWines = filter === "all" ? baseWines : baseWines.filter((w) => w.type === filter);
 
   const drinkNowCount = wines.filter((w) => {
     const year = new Date().getFullYear();
@@ -99,7 +102,7 @@ const Index = () => {
 
       <main className="container max-w-4xl mx-auto px-4 py-6">
         {/* Filters */}
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="flex gap-2 mb-6 flex-wrap items-center">
           {typeFilters.map((f) => (
             <Button
               key={f.value}
@@ -115,6 +118,7 @@ const Index = () => {
               )}
             </Button>
           ))}
+          <WineFilters wines={wines} onFilteredWines={(f) => setCustomFiltered(f.length === wines.length ? null : f)} />
         </div>
 
         {isLoading ? (
