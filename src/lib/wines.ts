@@ -94,15 +94,20 @@ export async function restoreToCellar(drunkWineId: string) {
   if (fetchError) throw fetchError;
 
   // Check for an existing matching wine in the cellar
-  const { data: existing } = await supabase
+  let query = supabase
     .from("wines")
     .select("id, quantity")
     .eq("user_id", wine.user_id)
     .eq("name", wine.name)
-    .eq("type", wine.type)
-    .is("vintage", wine.vintage ?? null)
-    .is("winery", wine.winery ?? null)
-    .maybeSingle();
+    .eq("type", wine.type);
+
+  if (wine.vintage != null) query = query.eq("vintage", wine.vintage);
+  else query = query.is("vintage", null);
+
+  if (wine.winery != null) query = query.eq("winery", wine.winery);
+  else query = query.is("winery", null);
+
+  const { data: existing } = await query.maybeSingle();
 
   if (existing) {
     const { error: updateError } = await supabase
