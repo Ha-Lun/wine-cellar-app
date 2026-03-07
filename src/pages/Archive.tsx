@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchDrunkWines } from "@/lib/wines";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchDrunkWines, restoreToCellar } from "@/lib/wines";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthForm } from "@/components/AuthForm";
 import { Badge } from "@/components/ui/badge";
-import { Wine, Loader2, GlassWater, ArrowLeft, Star } from "lucide-react";
+import { Wine, Loader2, GlassWater, ArrowLeft, Star, Pencil, ArchiveRestore, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,9 @@ import { WineType } from "@/types/wine";
 import { format } from "date-fns";
 import { Grape, Calendar } from "lucide-react";
 import { WineRatingDialog } from "@/components/WineRatingDialog";
+import { EditWineDialog } from "@/components/EditWineDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const typeConfig: Record<WineType, { label: string; className: string }> = {
   red: { label: "Red", className: "bg-wine-red text-primary-foreground" },
@@ -23,11 +26,34 @@ const Archive = () => {
   const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const [ratingWine, setRatingWine] = useState<any>(null);
+  const [editWine, setEditWine] = useState<any>(null);
 
   const { data: drunkWines = [], isLoading } = useQuery({
     queryKey: ["drunk-wines"],
     queryFn: fetchDrunkWines,
     enabled: !!user,
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: restoreToCellar,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["drunk-wines"] });
+      queryClient.invalidateQueries({ queryKey: ["wines"] });
+      toast.success("Wine restored to cellar!");
+    },
+    onError: () => toast.error("Failed to restore wine"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("drunk_wines").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["drunk-wines"] });
+      toast.success("Wine removed from archive");
+    },
+    onError: () => toast.error("Failed to delete wine"),
   });
 
   if (authLoading) {
@@ -124,8 +150,17 @@ const Archive = () => {
                     <p className="mt-2 text-sm text-muted-foreground italic line-clamp-2">"{wine.notes}"</p>
                   )}
 
-                  {/* Rate button - bottom left */}
+                  {/* Action buttons - bottom left */}
                   <div className="absolute bottom-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={() => setEditWine(wine)}
+                      title="Edit wine"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -134,6 +169,24 @@ const Archive = () => {
                       title="Rate wine"
                     >
                       <Star className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={() => restoreMutation.mutate(wine.id)}
+                      title="Restore to cellar"
+                    >
+                      <ArchiveRestore className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => deleteMutation.mutate(wine.id)}
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </motion.div>
@@ -150,6 +203,19 @@ const Archive = () => {
           onOpenChange={(open) => { if (!open) setRatingWine(null); }}
           onUpdated={() => {
             setRatingWine(null);
+            queryClient.invalidateQueries({ queryKey: ["drunk-wines"] });
+          }}
+          table="drunk_wines"
+        />
+      )}
+
+      {editWine && (
+        <EditWineDialog
+          wine={editWine}
+          open={!!editWine}
+          onOpenChange={(open) => { if (!open) setEditWine(null); }}
+          onUpdated={() => {
+            setEditWine(null);
             queryClient.invalidateQueries({ queryKey: ["drunk-wines"] });
           }}
           table="drunk_wines"

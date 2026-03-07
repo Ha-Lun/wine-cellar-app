@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Wine, WineType } from "@/types/wine";
 import { motion } from "framer-motion";
-import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed, WineOff, Star } from "lucide-react";
+import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed, GlassWater, Star, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { WineRatingDialog } from "@/components/WineRatingDialog";
+import { EditWineDialog } from "@/components/EditWineDialog";
 
 const typeConfig: Record<WineType, { label: string; className: string }> = {
   red: { label: "Red", className: "bg-wine-red text-primary-foreground" },
@@ -22,6 +23,7 @@ interface WineCardProps {
 
 export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: WineCardProps) {
   const [ratingOpen, setRatingOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [drunkAfterRate, setDrunkAfterRate] = useState(false);
   const config = typeConfig[wine.type];
   const currentYear = new Date().getFullYear();
@@ -137,6 +139,15 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
           variant="ghost"
           size="icon"
           className="h-8 w-8 text-muted-foreground hover:text-primary"
+          onClick={() => setEditOpen(true)}
+          title="Edit wine"
+        >
+          <Pencil className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-primary"
           onClick={() => { setDrunkAfterRate(false); setRatingOpen(true); }}
           title="Rate wine"
         >
@@ -149,7 +160,7 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
           onClick={handleMarkDrunk}
           title="Mark as drunk"
         >
-          <WineOff className="w-4 h-4" />
+          <GlassWater className="w-4 h-4" />
         </Button>
         <Button
           variant="ghost"
@@ -168,6 +179,13 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
         onOpenChange={handleRatingClose}
         onUpdated={handleRatingSaved}
         markAsDrunk={drunkAfterRate}
+      />
+
+      <EditWineDialog
+        wine={wine}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onUpdated={onUpdated}
       />
     </motion.div>
   );

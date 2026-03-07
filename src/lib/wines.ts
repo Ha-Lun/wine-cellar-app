@@ -37,7 +37,6 @@ export async function deleteWine(id: string) {
 }
 
 export async function markWineAsDrunk(wineId: string) {
-  // Fetch the wine first
   const { data: wine, error: fetchError } = await supabase
     .from("wines")
     .select("*")
@@ -45,7 +44,6 @@ export async function markWineAsDrunk(wineId: string) {
     .single();
   if (fetchError) throw fetchError;
 
-  // Insert into drunk_wines archive
   const { error: insertError } = await supabase
     .from("drunk_wines")
     .insert({
@@ -72,7 +70,6 @@ export async function markWineAsDrunk(wineId: string) {
     });
   if (insertError) throw insertError;
 
-  // If quantity > 1, decrement; otherwise delete
   if (wine.quantity > 1) {
     const { error: updateError } = await supabase
       .from("wines")
@@ -86,6 +83,46 @@ export async function markWineAsDrunk(wineId: string) {
       .eq("id", wineId);
     if (deleteError) throw deleteError;
   }
+}
+
+export async function restoreToCellar(drunkWineId: string) {
+  const { data: wine, error: fetchError } = await supabase
+    .from("drunk_wines")
+    .select("*")
+    .eq("id", drunkWineId)
+    .single();
+  if (fetchError) throw fetchError;
+
+  const { error: insertError } = await supabase
+    .from("wines")
+    .insert({
+      user_id: wine.user_id,
+      name: wine.name,
+      winery: wine.winery,
+      region: wine.region,
+      country: wine.country,
+      vintage: wine.vintage,
+      type: wine.type,
+      grape_variety: wine.grape_variety,
+      notes: wine.notes,
+      food_pairings: wine.food_pairings,
+      rating: wine.rating,
+      image_url: wine.image_url,
+      drink_from: wine.drink_from,
+      drink_until: wine.drink_until,
+      body: wine.body,
+      tannin: wine.tannin,
+      sweetness: wine.sweetness,
+      acidity: wine.acidity,
+      quantity: wine.quantity,
+    });
+  if (insertError) throw insertError;
+
+  const { error: deleteError } = await supabase
+    .from("drunk_wines")
+    .delete()
+    .eq("id", drunkWineId);
+  if (deleteError) throw deleteError;
 }
 
 export async function fetchDrunkWines() {
