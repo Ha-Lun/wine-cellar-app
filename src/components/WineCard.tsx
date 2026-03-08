@@ -97,8 +97,8 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
             </p>
           )}
         </div>
-        <div className="flex flex-col items-center text-primary">
-          <WineIcon className="w-8 h-8" />
+        <div className="flex flex-col items-center">
+          <WineTypeIcon type={wine.type} />
         </div>
       </div>
 
