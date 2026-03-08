@@ -147,8 +147,8 @@ const Archive = () => {
                         </p>
                       )}
                     </div>
-                    <div className="flex flex-col items-center text-muted-foreground">
-                      <Wine className="w-8 h-8" />
+                    <div className="flex flex-col items-center">
+                      <WineTypeIcon type={wine.type as WineType} />
                     </div>
                   </div>
                   <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
