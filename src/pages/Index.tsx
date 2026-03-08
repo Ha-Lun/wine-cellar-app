@@ -119,6 +119,9 @@ const Index = () => {
                 {drinkNowCount > 0 && (
                   <span> · <span className="text-primary">{drinkNowCount} ready to drink</span></span>
                 )}
+                {pastPeakCount > 0 && (
+                  <span> · <span className="text-destructive">{pastPeakCount} past peak</span></span>
+                )}
               </p>
             </div>
           </div>
