@@ -83,9 +83,14 @@ const Index = () => {
     );
   };
 
+  const currentYear = new Date().getFullYear();
+  
   const drinkNowCount = wines.filter((w) => {
-    const year = new Date().getFullYear();
-    return w.drink_from && w.drink_until && year >= w.drink_from && year <= w.drink_until;
+    return w.drink_from && w.drink_until && currentYear >= w.drink_from && currentYear <= w.drink_until;
+  }).length;
+
+  const pastPeakCount = wines.filter((w) => {
+    return w.drink_until && currentYear > w.drink_until;
   }).length;
 
   if (authLoading) {
