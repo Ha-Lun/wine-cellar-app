@@ -1,0 +1,1 @@
+ALTER TYPE public.wine_type ADD VALUE 'sparkling';

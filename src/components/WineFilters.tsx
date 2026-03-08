@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { Filter, X } from "lucide-react";
+import { Filter, X, ChevronDown, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface WineFiltersProps {
@@ -12,16 +12,18 @@ interface WineFiltersProps {
 
 type FilterState = {
   countries: string[];
+  regions: string[];
   grapes: string[];
   years: number[];
   foods: string[];
 };
 
-const emptyFilters: FilterState = { countries: [], grapes: [], years: [], foods: [] };
+const emptyFilters: FilterState = { countries: [], regions: [], grapes: [], years: [], foods: [] };
 
 export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
   const [open, setOpen] = useState(false);
+  const [expandedCountries, setExpandedCountries] = useState<string[]>([]);
 
   // Extract unique values
   const countries = [...new Set(wines.map((w) => w.country).filter(Boolean))].sort();
@@ -29,14 +31,28 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
   const years = [...new Set(wines.map((w) => w.vintage).filter(Boolean))].sort((a, b) => b - a);
   const foods = [...new Set(wines.flatMap((w) => w.food_pairings ?? []).filter(Boolean))].sort();
 
+  // Build country -> regions mapping
+  const regionsByCountry: Record<string, string[]> = {};
+  wines.forEach((w) => {
+    if (w.country && w.region) {
+      if (!regionsByCountry[w.country]) regionsByCountry[w.country] = [];
+      if (!regionsByCountry[w.country].includes(w.region)) {
+        regionsByCountry[w.country].push(w.region);
+      }
+    }
+  });
+  Object.keys(regionsByCountry).forEach((c) => regionsByCountry[c].sort());
+
   const activeCount =
-    filters.countries.length + filters.grapes.length + filters.years.length + filters.foods.length;
+    filters.countries.length + filters.regions.length + filters.grapes.length + filters.years.length + filters.foods.length;
 
   const apply = (next: FilterState) => {
     setFilters(next);
     let result = wines;
     if (next.countries.length)
       result = result.filter((w) => next.countries.includes(w.country));
+    if (next.regions.length)
+      result = result.filter((w) => next.regions.includes(w.region));
     if (next.grapes.length)
       result = result.filter((w) => next.grapes.includes(w.grape_variety));
     if (next.years.length)
@@ -57,8 +73,15 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
     apply(next);
   };
 
+  const toggleCountryExpand = (country: string) => {
+    setExpandedCountries((prev) =>
+      prev.includes(country) ? prev.filter((c) => c !== country) : [...prev, country]
+    );
+  };
+
   const clear = () => {
     setFilters(emptyFilters);
+    setExpandedCountries([]);
     onFilteredWines(wines);
   };
 
@@ -120,7 +143,66 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
         </div>
         <ScrollArea className="max-h-80">
           <div className="p-4 space-y-4">
-            <ChipList label="Country" items={countries} selected={filters.countries} filterKey="countries" />
+            {/* Country with nested regions */}
+            {countries.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1.5">Country / Region</p>
+                <div className="space-y-1">
+                  {countries.map((country) => {
+                    const regions = regionsByCountry[country] || [];
+                    const hasRegions = regions.length > 0;
+                    const isExpanded = expandedCountries.includes(country);
+                    const isCountrySelected = filters.countries.includes(country);
+
+                    return (
+                      <div key={country}>
+                        <div className="flex items-center gap-1">
+                          {hasRegions && (
+                            <button
+                              onClick={() => toggleCountryExpand(country)}
+                              className="p-0.5 hover:bg-muted rounded"
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                              ) : (
+                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                              )}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => toggle("countries", country)}
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors border ${
+                              isCountrySelected
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-muted text-muted-foreground border-border hover:border-primary/50"
+                            }`}
+                          >
+                            {country}
+                          </button>
+                        </div>
+                        {hasRegions && isExpanded && (
+                          <div className="ml-6 mt-1 flex flex-wrap gap-1.5">
+                            {regions.map((region) => (
+                              <button
+                                key={region}
+                                onClick={() => toggle("regions", region)}
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors border ${
+                                  filters.regions.includes(region)
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-muted/50 text-muted-foreground border-border hover:border-primary/50"
+                                }`}
+                              >
+                                {region}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <ChipList label="Grape" items={grapes} selected={filters.grapes} filterKey="grapes" />
             <ChipList label="Year" items={years} selected={filters.years} filterKey="years" />
             <ChipList label="Food pairing" items={foods} selected={filters.foods} filterKey="foods" />

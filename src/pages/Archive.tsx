@@ -21,6 +21,7 @@ const typeConfig: Record<WineType, { label: string; className: string }> = {
   red: { label: "Red", className: "bg-wine-red text-primary-foreground" },
   white: { label: "White", className: "bg-wine-white text-foreground" },
   champagne: { label: "Champagne", className: "bg-wine-champagne text-foreground" },
+  sparkling: { label: "Sparkling", className: "bg-wine-champagne text-foreground" },
 };
 
 const Archive = () => {
