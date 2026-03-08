@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchWines, deleteWine, markWineAsDrunk } from "@/lib/wines";
 import { WineType } from "@/types/wine";
@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { AuthForm } from "@/components/AuthForm";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wine, LogOut, Loader2, GlassWater, Archive } from "lucide-react";
+import { Wine, LogOut, Loader2, GlassWater, Archive, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -26,6 +26,7 @@ const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const [filter, setFilter] = useState<WineType | "all">("all");
   const [customFiltered, setCustomFiltered] = useState<any[] | null>(null);
+  const [collapsedCountries, setCollapsedCountries] = useState<string[]>([]);
   const queryClient = useQueryClient();
 
   const { data: wines = [], isLoading } = useQuery({
@@ -64,6 +65,33 @@ const Index = () => {
 
   const baseWines = customFiltered ?? wines;
   const filteredWines = filter === "all" ? baseWines : baseWines.filter((w) => w.type === filter);
+
+  // Group wines by country
+  const winesByCountry = useMemo(() => {
+    const grouped: Record<string, typeof filteredWines> = {};
+    const unknownCountry = "Unknown";
+    
+    filteredWines.forEach((wine) => {
+      const country = wine.country || unknownCountry;
+      if (!grouped[country]) grouped[country] = [];
+      grouped[country].push(wine);
+    });
+
+    // Sort countries alphabetically, but put "Unknown" at the end
+    const sortedKeys = Object.keys(grouped).sort((a, b) => {
+      if (a === unknownCountry) return 1;
+      if (b === unknownCountry) return -1;
+      return a.localeCompare(b);
+    });
+
+    return sortedKeys.map((country) => ({ country, wines: grouped[country] }));
+  }, [filteredWines]);
+
+  const toggleCountry = (country: string) => {
+    setCollapsedCountries((prev) =>
+      prev.includes(country) ? prev.filter((c) => c !== country) : [...prev, country]
+    );
+  };
 
   const drinkNowCount = wines.filter((w) => {
     const year = new Date().getFullYear();
@@ -141,17 +169,44 @@ const Index = () => {
             </p>
           </motion.div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {filteredWines.map((wine, i) => (
-              <WineCard
-                key={wine.id}
-                wine={wine}
-                onDelete={(id) => deleteMutation.mutate(id)}
-                onMarkDrunk={(id) => drunkMutation.mutate(id)}
-                onUpdated={() => queryClient.invalidateQueries({ queryKey: ["wines"] })}
-                index={i}
-              />
-            ))}
+          <div className="space-y-6">
+            {winesByCountry.map(({ country, wines: countryWines }) => {
+              const isCollapsed = collapsedCountries.includes(country);
+              return (
+                <div key={country}>
+                  <button
+                    onClick={() => toggleCountry(country)}
+                    className="flex items-center gap-2 mb-3 group"
+                  >
+                    {isCollapsed ? (
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <h2 className="font-heading text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                      {country}
+                    </h2>
+                    <Badge variant="secondary" className="text-xs">
+                      {countryWines.length}
+                    </Badge>
+                  </button>
+                  {!isCollapsed && (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {countryWines.map((wine, i) => (
+                        <WineCard
+                          key={wine.id}
+                          wine={wine}
+                          onDelete={(id) => deleteMutation.mutate(id)}
+                          onMarkDrunk={(id) => drunkMutation.mutate(id)}
+                          onUpdated={() => queryClient.invalidateQueries({ queryKey: ["wines"] })}
+                          index={i}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </main>
