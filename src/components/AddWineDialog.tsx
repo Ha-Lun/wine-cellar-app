@@ -210,6 +210,7 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
                 <SelectContent>
                   <SelectItem value="red">Red Wine</SelectItem>
                   <SelectItem value="white">White Wine</SelectItem>
+                  <SelectItem value="sparkling">Sparkling</SelectItem>
                   <SelectItem value="champagne">Champagne</SelectItem>
                 </SelectContent>
               </Select>
