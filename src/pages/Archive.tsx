@@ -4,7 +4,7 @@ import { fetchDrunkWines, restoreToCellar } from "@/lib/wines";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthForm } from "@/components/AuthForm";
 import { Badge } from "@/components/ui/badge";
-import { Wine, Loader2, GlassWater, ArrowLeft, Star, Pencil, ArchiveRestore, Trash2 } from "lucide-react";
+import { Wine, Loader2, GlassWater, ArrowLeft, Star, Pencil, ArchiveRestore, Trash2, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
