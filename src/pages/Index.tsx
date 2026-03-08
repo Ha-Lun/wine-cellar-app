@@ -53,16 +53,6 @@ const Index = () => {
     onError: () => toast.error("Failed to archive wine"),
   });
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) return <AuthForm />;
-
   const baseWines = customFiltered ?? wines;
   const filteredWines = filter === "all" ? baseWines : baseWines.filter((w) => w.type === filter);
 
@@ -97,6 +87,16 @@ const Index = () => {
     const year = new Date().getFullYear();
     return w.drink_from && w.drink_until && year >= w.drink_from && year <= w.drink_until;
   }).length;
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) return <AuthForm />;
 
   return (
     <div className="min-h-screen bg-background">
