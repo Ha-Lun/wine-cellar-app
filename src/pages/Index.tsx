@@ -113,7 +113,7 @@ const Index = () => {
             >
               {f.label}
               {f.value !== "all" && (
-                <Badge variant="outline" className="ml-1.5 text-xs">
+                <Badge variant="secondary" className="ml-1.5 text-xs border-0">
                   {wines.filter((w) => f.value === "all" || w.type === f.value).length}
                 </Badge>
               )}
