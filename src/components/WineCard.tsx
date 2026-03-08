@@ -7,11 +7,26 @@ import { Button } from "@/components/ui/button";
 import { WineRatingDialog } from "@/components/WineRatingDialog";
 import { EditWineDialog } from "@/components/EditWineDialog";
 
-const typeConfig: Record<WineType, { label: string; className: string }> = {
-  red: { label: "Red", className: "bg-wine-red text-primary-foreground" },
-  white: { label: "White", className: "bg-wine-white text-foreground" },
-  champagne: { label: "Champagne", className: "bg-wine-champagne text-foreground" },
-  sparkling: { label: "Sparkling", className: "bg-wine-champagne text-foreground" },
+const typeConfig: Record<WineType, { label: string; className: string; iconColor: string }> = {
+  red: { label: "Red", className: "bg-wine-red text-primary-foreground", iconColor: "text-[#722F37]" },
+  white: { label: "White", className: "bg-wine-white text-foreground", iconColor: "text-[#F5E6C8]" },
+  champagne: { label: "Champagne", className: "bg-wine-champagne text-foreground", iconColor: "text-[#F7E7CE]" },
+  sparkling: { label: "Sparkling", className: "bg-wine-champagne text-foreground", iconColor: "text-[#E8D4B8]" },
+};
+
+const WineTypeIcon = ({ type }: { type: WineType }) => {
+  const config = typeConfig[type];
+  
+  if (type === "sparkling" || type === "champagne") {
+    return (
+      <div className="relative">
+        <WineIcon className={`w-8 h-8 ${config.iconColor}`} />
+        <Sparkles className="w-3 h-3 text-amber-400 absolute -top-1 -right-1" />
+      </div>
+    );
+  }
+  
+  return <WineIcon className={`w-8 h-8 ${config.iconColor}`} />;
 };
 
 interface WineCardProps {
