@@ -4,7 +4,7 @@ import { fetchDrunkWines, restoreToCellar } from "@/lib/wines";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthForm } from "@/components/AuthForm";
 import { Badge } from "@/components/ui/badge";
-import { Wine, Loader2, GlassWater, ArrowLeft, Star, Pencil, ArchiveRestore, Trash2 } from "lucide-react";
+import { Wine, Loader2, GlassWater, ArrowLeft, Star, Pencil, ArchiveRestore, Trash2, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,26 @@ import { WineFilters } from "@/components/WineFilters";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const typeConfig: Record<WineType, { label: string; className: string }> = {
-  red: { label: "Red", className: "bg-wine-red text-primary-foreground" },
-  white: { label: "White", className: "bg-wine-white text-foreground" },
-  champagne: { label: "Champagne", className: "bg-wine-champagne text-foreground" },
-  sparkling: { label: "Sparkling", className: "bg-wine-champagne text-foreground" },
+const typeConfig: Record<WineType, { label: string; className: string; iconColor: string }> = {
+  red: { label: "Red", className: "bg-wine-red text-primary-foreground", iconColor: "text-[#722F37]" },
+  white: { label: "White", className: "bg-wine-white text-foreground", iconColor: "text-[#F5E6C8]" },
+  champagne: { label: "Champagne", className: "bg-wine-champagne text-foreground", iconColor: "text-[#F7E7CE]" },
+  sparkling: { label: "Sparkling", className: "bg-wine-champagne text-foreground", iconColor: "text-[#E8D4B8]" },
+};
+
+const WineTypeIcon = ({ type }: { type: WineType }) => {
+  const config = typeConfig[type];
+  
+  if (type === "sparkling" || type === "champagne") {
+    return (
+      <div className="relative">
+        <Wine className={`w-8 h-8 ${config.iconColor}`} />
+        <Sparkles className="w-3 h-3 text-amber-400 absolute -top-1 -right-1" />
+      </div>
+    );
+  }
+  
+  return <Wine className={`w-8 h-8 ${config.iconColor}`} />;
 };
 
 const Archive = () => {
@@ -132,8 +147,8 @@ const Archive = () => {
                         </p>
                       )}
                     </div>
-                    <div className="flex flex-col items-center text-muted-foreground">
-                      <Wine className="w-8 h-8" />
+                    <div className="flex flex-col items-center">
+                      <WineTypeIcon type={wine.type as WineType} />
                     </div>
                   </div>
                   <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">

@@ -1,17 +1,32 @@
 import { useState } from "react";
 import { Wine, WineType } from "@/types/wine";
 import { motion } from "framer-motion";
-import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed, GlassWater, Star, Pencil } from "lucide-react";
+import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed, GlassWater, Star, Pencil, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { WineRatingDialog } from "@/components/WineRatingDialog";
 import { EditWineDialog } from "@/components/EditWineDialog";
 
-const typeConfig: Record<WineType, { label: string; className: string }> = {
-  red: { label: "Red", className: "bg-wine-red text-primary-foreground" },
-  white: { label: "White", className: "bg-wine-white text-foreground" },
-  champagne: { label: "Champagne", className: "bg-wine-champagne text-foreground" },
-  sparkling: { label: "Sparkling", className: "bg-wine-champagne text-foreground" },
+const typeConfig: Record<WineType, { label: string; className: string; iconColor: string }> = {
+  red: { label: "Red", className: "bg-wine-red text-primary-foreground", iconColor: "text-[#722F37]" },
+  white: { label: "White", className: "bg-wine-white text-foreground", iconColor: "text-[#F5E6C8]" },
+  champagne: { label: "Champagne", className: "bg-wine-champagne text-foreground", iconColor: "text-[#F7E7CE]" },
+  sparkling: { label: "Sparkling", className: "bg-wine-champagne text-foreground", iconColor: "text-[#E8D4B8]" },
+};
+
+const WineTypeIcon = ({ type }: { type: WineType }) => {
+  const config = typeConfig[type];
+  
+  if (type === "sparkling" || type === "champagne") {
+    return (
+      <div className="relative">
+        <WineIcon className={`w-8 h-8 ${config.iconColor}`} />
+        <Sparkles className="w-3 h-3 text-amber-400 absolute -top-1 -right-1" />
+      </div>
+    );
+  }
+  
+  return <WineIcon className={`w-8 h-8 ${config.iconColor}`} />;
 };
 
 interface WineCardProps {
@@ -82,8 +97,8 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
             </p>
           )}
         </div>
-        <div className="flex flex-col items-center text-primary">
-          <WineIcon className="w-8 h-8" />
+        <div className="flex flex-col items-center">
+          <WineTypeIcon type={wine.type} />
         </div>
       </div>
 
