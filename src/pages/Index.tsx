@@ -18,6 +18,7 @@ const typeFilters: { value: WineType | "all"; label: string }[] = [
   { value: "all", label: "All Wines" },
   { value: "red", label: "Red" },
   { value: "white", label: "White" },
+  { value: "sparkling", label: "Sparkling" },
   { value: "champagne", label: "Champagne" },
 ];
 
