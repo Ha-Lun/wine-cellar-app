@@ -175,7 +175,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      wine_type: "red" | "white" | "champagne"
+      wine_type: "red" | "white" | "champagne" | "sparkling"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -303,7 +303,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      wine_type: ["red", "white", "champagne"],
+      wine_type: ["red", "white", "champagne", "sparkling"],
     },
   },
 } as const
