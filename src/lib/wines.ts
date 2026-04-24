@@ -58,6 +58,7 @@ export async function markWineAsDrunk(wineId: string) {
       notes: wine.notes,
       food_pairings: wine.food_pairings,
       rating: wine.rating,
+      vivino_rating: wine.vivino_rating,
       image_url: wine.image_url,
       drink_from: wine.drink_from,
       drink_until: wine.drink_until,
@@ -130,6 +131,7 @@ export async function restoreToCellar(drunkWineId: string) {
         notes: wine.notes,
         food_pairings: wine.food_pairings,
         rating: wine.rating,
+        vivino_rating: wine.vivino_rating,
         image_url: wine.image_url,
         drink_from: wine.drink_from,
         drink_until: wine.drink_until,
@@ -164,4 +166,12 @@ export async function scanWineLabel(imageBase64: string) {
   });
   if (error) throw error;
   return data;
+}
+
+export async function getVivinoRating(query: string) {
+  const { data, error } = await supabase.functions.invoke("get-vivino-rating", {
+    body: { query },
+  });
+  if (error) throw error;
+  return data.rating as number | null;
 }

@@ -1,14 +1,15 @@
 import { useState, useRef } from "react";
 import { WineType, WineInsert, WineScanResult } from "@/types/wine";
-import { addWine, scanWineLabel } from "@/lib/wines";
+import { addWine, scanWineLabel, getVivinoRating } from "@/lib/wines";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, Plus, Loader2, Wine } from "lucide-react";
+import { Camera, Plus, Loader2, Wine, Search, Star } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -21,6 +22,7 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [fetchingRating, setFetchingRating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -36,13 +38,14 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
     drink_until: "",
     food_pairings: "",
     quantity: "1",
+    vivino_rating: null as number | null,
   });
 
   const resetForm = () => {
     setForm({
       name: "", winery: "", region: "", country: "", vintage: "",
       type: "red", grape_variety: "", notes: "", drink_from: "",
-      drink_until: "", food_pairings: "", quantity: "1",
+      drink_until: "", food_pairings: "", quantity: "1", vivino_rating: null,
     });
   };
 
@@ -82,6 +85,29 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
     }
   };
 
+  const handleFetchRating = async () => {
+    if (!form.name) {
+      toast.error("Please enter a wine name first");
+      return;
+    }
+    const query = `${form.name} ${form.vintage || ""}`.trim();
+    setFetchingRating(true);
+    try {
+      const rating = await getVivinoRating(query);
+      if (rating) {
+        setForm({ ...form, vivino_rating: rating });
+        toast.success(`Found Vivino rating: ${rating}`);
+      } else {
+        toast.error("Could not find a Vivino rating for this wine");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch Vivino rating");
+    } finally {
+      setFetchingRating(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!form.name.trim()) {
       toast.error("Wine name is required");
@@ -108,6 +134,7 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
         drink_until: form.drink_until ? parseInt(form.drink_until) : null,
         food_pairings: form.food_pairings ? form.food_pairings.split(",").map((s) => s.trim()).filter(Boolean) : null,
         quantity: parseInt(form.quantity) || 1,
+        vivino_rating: form.vivino_rating,
       };
       await addWine(wine);
       toast.success("Wine added to your cellar!");
@@ -234,6 +261,26 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
             <div>
               <Label htmlFor="quantity">Quantity</Label>
               <Input id="quantity" type="number" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
+            </div>
+            <div className="col-span-2 flex items-center justify-between p-3 border rounded-md bg-muted/50">
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">Vivino Rating</span>
+                {form.vivino_rating ? (
+                  <Badge variant="secondary" className="ml-2 font-bold">{form.vivino_rating}</Badge>
+                ) : (
+                  <span className="text-sm text-muted-foreground ml-2">Not checked</span>
+                )}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleFetchRating}
+                disabled={fetchingRating || !form.name}
+              >
+                {fetchingRating ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Search className="w-3 h-3 mr-2" />}
+                Check Rating
+              </Button>
             </div>
           </div>
           <div>

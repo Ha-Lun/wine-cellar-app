@@ -129,17 +129,27 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
         </div>
       )}
 
-      {wine.rating && (
-        <div className="mt-2 flex items-center gap-1">
-          {Array.from({ length: 10 }, (_, i) => (
-            <Star
-              key={i}
-              className={`w-3 h-3 ${
-                i < wine.rating! ? "fill-primary text-primary" : "text-muted-foreground/20"
-              }`}
-            />
-          ))}
-          <span className="ml-1 text-xs text-muted-foreground">{wine.rating}/10</span>
+      {(wine.rating || wine.vivino_rating) && (
+        <div className="mt-2 flex items-center gap-3">
+          {wine.rating && (
+            <div className="flex items-center gap-1">
+              {Array.from({ length: 10 }, (_, i) => (
+                <Star
+                  key={i}
+                  className={`w-3 h-3 ${
+                    i < wine.rating! ? "fill-primary text-primary" : "text-muted-foreground/20"
+                  }`}
+                />
+              ))}
+              <span className="ml-1 text-xs text-muted-foreground">{wine.rating}/10</span>
+            </div>
+          )}
+          {wine.vivino_rating && (
+            <Badge variant="outline" className="text-xs bg-[#AA1E3A]/10 text-[#AA1E3A] border-[#AA1E3A]/20 hover:bg-[#AA1E3A]/20 font-medium">
+              <Star className="w-3 h-3 fill-current mr-1" />
+              Vivino {wine.vivino_rating}
+            </Badge>
+          )}
         </div>
       )}
 

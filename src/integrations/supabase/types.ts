@@ -39,6 +39,7 @@ export type Database = {
           user_id: string
           vintage: number | null
           winery: string | null
+          vivino_rating: number | null
         }
         Insert: {
           acidity?: number | null
@@ -64,6 +65,7 @@ export type Database = {
           user_id: string
           vintage?: number | null
           winery?: string | null
+          vivino_rating?: number | null
         }
         Update: {
           acidity?: number | null
@@ -89,6 +91,7 @@ export type Database = {
           user_id?: string
           vintage?: number | null
           winery?: string | null
+          vivino_rating?: number | null
         }
         Relationships: []
       }
@@ -116,6 +119,7 @@ export type Database = {
           user_id: string
           vintage: number | null
           winery: string | null
+          vivino_rating: number | null
         }
         Insert: {
           acidity?: number | null
@@ -140,6 +144,7 @@ export type Database = {
           user_id: string
           vintage?: number | null
           winery?: string | null
+          vivino_rating?: number | null
         }
         Update: {
           acidity?: number | null
@@ -164,6 +169,7 @@ export type Database = {
           user_id?: string
           vintage?: number | null
           winery?: string | null
+          vivino_rating?: number | null
         }
         Relationships: []
       }

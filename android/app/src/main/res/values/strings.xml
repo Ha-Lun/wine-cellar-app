@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">wine-cellar</string>
+    <string name="title_activity_main">wine-cellar</string>
+    <string name="package_name">com.hannes.winecellar</string>
+    <string name="custom_url_scheme">com.hannes.winecellar</string>
+</resources>
