@@ -7,7 +7,7 @@ const corsHeaders = {
 
 async function callAI(apiKey: string, messages: any[], useTools = false) {
   const body: any = {
-    model: "google/gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
     messages,
   };
 
@@ -41,7 +41,7 @@ async function callAI(apiKey: string, messages: any[], useTools = false) {
     body.tool_choice = { type: "function", function: { name: "wine_data" } };
   }
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -55,8 +55,8 @@ async function callAI(apiKey: string, messages: any[], useTools = false) {
     if (status === 429) throw { status: 429, message: "Rate limit exceeded, please try again later." };
     if (status === 402) throw { status: 402, message: "AI credits exhausted. Please add funds." };
     const errText = await response.text();
-    console.error("AI gateway error:", status, errText);
-    throw { status: 500, message: "AI gateway error" };
+    console.error("Gemini API error:", status, errText);
+    throw { status: 500, message: "Gemini API error" };
   }
 
   return await response.json();
@@ -101,53 +101,28 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
-    // ── Step 1: Extract raw data from the wine label image ──
-    console.log("Step 1: Extracting data from wine label...");
-    const step1 = await callAI(LOVABLE_API_KEY, [
-      {
-        role: "system",
-        content: `You are a wine expert. Extract ALL visible information from this wine label image. Return ONLY a JSON object with these fields:
-- name, winery, region, country, vintage (number), type ("red"/"white"/"champagne"/"sparkling"), grape_variety
-Return ONLY valid JSON, no markdown.`,
-      },
-      {
-        role: "user",
-        content: [
-          { type: "image_url", image_url: { url: image } },
-          { type: "text", text: "Extract all visible information from this wine label. Return only JSON." },
-        ],
-      },
-    ]);
-
-    const rawContent = step1.choices?.[0]?.message?.content;
-    if (!rawContent) throw new Error("No response from AI step 1");
-
-    let cleaned = rawContent.trim();
-    if (cleaned.startsWith("```")) {
-      cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-    }
-    const extractedData = JSON.parse(cleaned);
-    console.log("Step 1 result:", JSON.stringify(extractedData));
-
-    // ── Step 2: Verify and enrich using AI knowledge base ──
-    console.log("Step 2: Verifying and enriching wine data...");
-    const step2 = await callAI(
-      LOVABLE_API_KEY,
+    // ── Step 1 & 2 Combined: Extract, verify, and enrich from the image directly ──
+    console.log("Analyzing wine label and enriching data...");
+    
+    const analysisResponse = await callAI(
+      GEMINI_API_KEY,
       [
         {
           role: "system",
           content: `You are a world-class wine expert and sommelier with encyclopedic knowledge of wines worldwide.
+Your job is to analyze the provided wine label image and return a structured JSON response with verified data.
 
-You will receive wine data extracted from a label image. Your job is to:
-1. VERIFY the data — correct any OCR errors or misreadings (e.g. wrong region, misspelled winery)
-2. FILL IN missing fields using your wine knowledge (region, country, grape variety, type)
-3. ESTIMATE the optimal drinking window (drink_from, drink_until) based on the wine's type, region, vintage, and producer quality
-4. SUGGEST 3-5 accurate food pairings based on the specific wine style
+Instructions:
+1. EXTRACT ALL visible information from the wine label image.
+2. VERIFY the data — correct any obvious errors or misreadings (e.g. wrong region, misspelled winery).
+3. FILL IN missing fields using your wine knowledge (region, country, grape variety, type) if you recognize the wine.
+4. ESTIMATE the optimal drinking window (drink_from, drink_until) based on the wine's type, region, vintage, and producer quality.
+5. SUGGEST 3-5 accurate food pairings based on the specific wine style.
 
 Drinking window guidelines:
 - Young simple whites: vintage + 1-3 years
@@ -155,26 +130,41 @@ Drinking window guidelines:
 - Champagne NV: 1-3 years from now, vintage: 5-15 years
 - Light reds (Pinot Noir, Beaujolais): vintage + 2-5 years
 - Medium reds (Merlot, Chianti): vintage + 3-8 years
-- Full-bodied reds (Cabernet, Barolo, Bordeaux Grand Cru): vintage + 5-25 years
-
-Use your knowledge to give the most accurate data possible. If you recognize the specific wine/producer, use that knowledge.`,
+- Full-bodied reds (Cabernet, Barolo, Bordeaux Grand Cru): vintage + 5-25 years`
         },
         {
           role: "user",
-          content: `Here is wine data extracted from a label. Please verify, correct, and enrich it:\n\n${JSON.stringify(extractedData, null, 2)}`,
-        },
+          content: [
+            { type: "image_url", image_url: { url: image } },
+            { type: "text", text: "Please analyze this wine label and return the structured data." }
+          ]
+        }
       ],
       true // use tool calling for structured output
     );
 
     // Extract structured data from tool call
-    const toolCall = step2.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall?.function?.arguments) {
-      throw new Error("No structured response from AI step 2");
+    const toolCall = analysisResponse.choices?.[0]?.message?.tool_calls?.[0];
+    
+    let wineData;
+    if (toolCall?.function?.arguments) {
+      wineData = JSON.parse(toolCall.function.arguments);
+      console.log("Structured result extracted from tool call:", JSON.stringify(wineData));
+    } else {
+      // Fallback in case the model ignored the tool and just returned JSON text
+      let rawContent = analysisResponse.choices?.[0]?.message?.content;
+      if (!rawContent) {
+        throw new Error("No response from AI");
+      }
+      
+      let cleaned = rawContent.trim();
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleaned = jsonMatch[0];
+      }
+      wineData = JSON.parse(cleaned);
+      console.log("Structured result extracted from text fallback:", JSON.stringify(wineData));
     }
-
-    const wineData = JSON.parse(toolCall.function.arguments);
-    console.log("Step 2 verified result:", JSON.stringify(wineData));
 
     return new Response(JSON.stringify(wineData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

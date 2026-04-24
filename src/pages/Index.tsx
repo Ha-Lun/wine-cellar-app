@@ -108,13 +108,13 @@ const Index = () => {
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="container max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="flex items-center gap-3 flex-1 min-w-0 pr-2">
+            <div className="w-9 h-9 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
               <Wine className="w-5 h-5 text-primary" />
             </div>
-            <div>
-              <h1 className="font-heading text-xl font-bold leading-tight">Wine Cellar</h1>
-              <p className="text-xs text-muted-foreground">
+            <div className="min-w-0">
+              <h1 className="font-heading text-xl font-bold leading-tight truncate">Wine Cellar</h1>
+              <p className="text-xs text-muted-foreground leading-snug break-words">
                 {wines.length} bottle{wines.length !== 1 ? "s" : ""}
                 {drinkNowCount > 0 && (
                   <span> · <span className="text-primary">{drinkNowCount} ready to drink</span></span>

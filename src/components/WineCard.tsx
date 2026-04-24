@@ -71,7 +71,7 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
-      className="group relative rounded-lg border border-border bg-card p-5 pb-12"
+      className="group relative flex flex-col rounded-lg border border-border bg-card p-5 h-full"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -84,15 +84,15 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
               <Badge variant="outline">×{wine.quantity}</Badge>
             )}
           </div>
-          <h3 className="font-heading text-lg font-semibold truncate">{wine.name}</h3>
+          <h3 className="font-heading text-lg font-semibold break-words line-clamp-3">{wine.name}</h3>
           {wine.winery && (
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
-              <Grape className="w-3.5 h-3.5" />
-              {wine.winery}
+            <p className="text-sm text-muted-foreground flex items-start gap-1.5 mt-1">
+              <Grape className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span className="break-words line-clamp-2">{wine.winery}</span>
             </p>
           )}
           {(wine.region || wine.country) && (
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5 break-words line-clamp-2">
               {[wine.region, wine.country].filter(Boolean).join(", ")}
             </p>
           )}
@@ -159,8 +159,7 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
         </p>
       )}
 
-      {/* Action buttons - bottom left */}
-      <div className="absolute bottom-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="mt-auto pt-4 border-t flex items-center justify-end gap-1">
         <Button
           variant="ghost"
           size="icon"

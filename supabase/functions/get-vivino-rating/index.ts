@@ -30,23 +30,62 @@ serve(async (req) => {
 
     console.log("Fetching Vivino rating for:", query);
 
-    const response = await fetch(`https://www.vivino.com/search/wines?q=${encodeURIComponent(query)}`, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-      }
-    });
+    let rating = null;
 
-    if (!response.ok) {
-      console.error(`Vivino request failed with status: ${response.status}`);
-      throw new Error("Failed to fetch from Vivino");
+    try {
+      // Use Googlebot User-Agent which often bypasses strict Cloudflare bot checks
+      const response = await fetch(`https://www.vivino.com/search/wines?q=${encodeURIComponent(query)}`, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5"
+        }
+      });
+
+      if (response.ok) {
+        const html = await response.text();
+        
+        // Look for average_rating or ratings_average
+        const match = html.match(/(?:average_rating|ratings_average)":\s*"?([\d\.]+)"?/);
+        if (match) {
+          rating = parseFloat(match[1]);
+        } else {
+          // Fallback regex for HTML elements
+          const fallbackMatch = html.match(/>([\d\.]+)<.*?stars/i);
+          if (fallbackMatch) {
+            rating = parseFloat(fallbackMatch[1]);
+          }
+        }
+      } else {
+        console.warn(`Vivino request failed with status: ${response.status}`);
+      }
+    } catch (e) {
+      console.warn("Direct Vivino fetch failed:", e);
     }
 
-    const html = await response.text();
-    
-    // Look for average_rating":"X.X" in the HTML string
-    // Vivino usually injects a preloaded state with the wine data
-    const match = html.match(/average_rating":\s*"?([\d\.]+)"?/);
-    let rating = match ? parseFloat(match[1]) : null;
+    // Fallback to DuckDuckGo search if direct Vivino fetch failed or found no rating
+    if (!rating) {
+      console.log("Falling back to DuckDuckGo search");
+      try {
+        const ddgResponse = await fetch(`https://html.duckduckgo.com/html/?q=site:vivino.com+${encodeURIComponent(query)}+"average+rating"`, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          }
+        });
+        
+        if (ddgResponse.ok) {
+          const ddgHtml = await ddgResponse.text();
+          // Look for rating in snippets like: "Average rating of 4.2 from" or "4.2 stars"
+          const ddgMatch = ddgHtml.match(/(?:Average rating[^0-9]+|Average of\s+|Rating:\s*)([0-5]\.\d)/i) 
+                        || ddgHtml.match(/([0-5]\.\d)\s*(?:stars|out of 5)/i);
+          if (ddgMatch) {
+            rating = parseFloat(ddgMatch[1]);
+          }
+        }
+      } catch (e) {
+        console.error("DuckDuckGo fallback failed:", e);
+      }
+    }
 
     console.log("Extracted rating:", rating);
 

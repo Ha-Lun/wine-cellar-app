@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, Plus, Loader2, Wine, Search, Star } from "lucide-react";
+import { Camera as CameraIcon, Plus, Loader2, Wine, Search, Star, Upload } from "lucide-react";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -23,7 +24,6 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [fetchingRating, setFetchingRating] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -49,19 +49,15 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
     });
   };
 
-  const handleScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processImageBase64 = async (base64String: string) => {
     setScanning(true);
     try {
-      const reader = new FileReader();
-      const base64 = await new Promise<string>((resolve) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
+      // Capacitor returns raw base64 string, we need to append the data URL prefix if it's missing
+      const base64DataUrl = base64String.startsWith('data:') 
+        ? base64String 
+        : `data:image/jpeg;base64,${base64String}`;
 
-      const result: WineScanResult = await scanWineLabel(base64);
+      const result: WineScanResult = await scanWineLabel(base64DataUrl);
       setForm({
         name: result.name || "",
         winery: result.winery || "",
@@ -77,11 +73,51 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
         quantity: "1",
       });
       toast.success("Label scanned! Review the details and save.");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error("Failed to scan label. Please try again or add manually.");
+      toast.error(`Failed to scan: ${err?.message || "Unknown error"}`);
     } finally {
       setScanning(false);
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      const image = await Camera.getPhoto({
+        quality: 80,
+        width: 1024,
+        allowEditing: false,
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Camera
+      });
+      if (image.base64String) {
+        await processImageBase64(image.base64String);
+      }
+    } catch (error: any) {
+      if (error.message !== "User cancelled photos app" && error.message !== "User cancelled") {
+        console.error(error);
+        toast.error("Failed to open camera");
+      }
+    }
+  };
+
+  const uploadPhoto = async () => {
+    try {
+      const image = await Camera.getPhoto({
+        quality: 80,
+        width: 1024,
+        allowEditing: false,
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Photos
+      });
+      if (image.base64String) {
+        await processImageBase64(image.base64String);
+      }
+    } catch (error: any) {
+      if (error.message !== "User cancelled photos app" && error.message !== "User cancelled") {
+        console.error(error);
+        toast.error("Failed to open gallery");
+      }
     }
   };
 
@@ -168,7 +204,7 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
         <Tabs defaultValue="manual" className="mt-2">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="scan" className="gap-2">
-              <Camera className="w-4 h-4" />
+              <CameraIcon className="w-4 h-4" />
               Scan Label
             </TabsTrigger>
             <TabsTrigger value="manual">Manual Entry</TabsTrigger>
@@ -176,28 +212,30 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
 
           <TabsContent value="scan" className="space-y-4 mt-4">
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={handleScan}
-              />
               {scanning ? (
                 <div className="flex flex-col items-center gap-3">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                   <p className="text-sm text-muted-foreground">Analyzing label with AI...</p>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-3">
-                  <Camera className="w-10 h-10 text-muted-foreground" />
+                <div className="flex flex-col items-center gap-4">
+                  <div className="flex gap-4">
+                    <CameraIcon className="w-10 h-10 text-muted-foreground" />
+                    <Upload className="w-10 h-10 text-muted-foreground" />
+                  </div>
                   <p className="text-sm text-muted-foreground">
-                    Take a photo or upload an image of the wine label
+                    Take a live photo or upload an existing image
                   </p>
-                  <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
-                    Choose Image
-                  </Button>
+                  <div className="flex gap-3 mt-2">
+                    <Button variant="default" onClick={takePhoto}>
+                      <CameraIcon className="w-4 h-4 mr-2" />
+                      Take Photo
+                    </Button>
+                    <Button variant="secondary" onClick={uploadPhoto}>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

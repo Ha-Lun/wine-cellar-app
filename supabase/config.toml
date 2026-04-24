@@ -1,4 +1,4 @@
-project_id = "cnhahvtqljardwwqvbhy"
+project_id = "nqdzezpwhnxzawkabxti"
 
 [functions.scan-wine-label]
 verify_jwt = false
