@@ -180,9 +180,17 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
       onAdded();
       // Background fetch of high-quality label image
       fetchLabelImage({ name: wine.name, winery: wine.winery, vintage: wine.vintage })
-        .then(async (url) => {
-          if (url && inserted?.id) {
-            await updateWine(inserted.id, { label_image_url: url });
+        .then(async ({ image_url, reason }) => {
+          if (reason === "no_credits") {
+            toast.error("Label image lookup limit reached. Connect more Firecrawl credits to continue.");
+            return;
+          }
+          if (reason === "rate_limited") {
+            toast.warning("Label image lookup rate-limited. Try again shortly.");
+            return;
+          }
+          if (image_url && inserted?.id) {
+            await updateWine(inserted.id, { label_image_url: image_url });
             onAdded();
           }
         })
