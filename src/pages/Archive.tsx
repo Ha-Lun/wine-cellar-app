@@ -14,6 +14,7 @@ import { Grape, Calendar } from "lucide-react";
 import { WineRatingDialog } from "@/components/WineRatingDialog";
 import { EditWineDialog } from "@/components/EditWineDialog";
 import { WineFilters } from "@/components/WineFilters";
+import { SystembolagetLink } from "@/components/SystembolagetLink";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
