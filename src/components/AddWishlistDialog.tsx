@@ -160,11 +160,19 @@ export function AddWishlistDialog({ onAdded }: AddWishlistDialogProps) {
         priority: form.priority,
         vivino_rating: form.vivino_rating,
       };
-      await addWishlistWine(wine);
+      const inserted = await addWishlistWine(wine);
       toast.success("Added to your wishlist!");
       resetForm();
       setOpen(false);
       onAdded();
+      fetchLabelImage({ name: wine.name, winery: wine.winery, vintage: wine.vintage })
+        .then(async (url) => {
+          if (url && inserted?.id) {
+            await updateWishlistWine(inserted.id, { label_image_url: url });
+            onAdded();
+          }
+        })
+        .catch(() => {});
     } catch (err) {
       console.error(err);
       toast.error("Failed to add wine");
