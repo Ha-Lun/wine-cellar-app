@@ -35,6 +35,8 @@ export type Database = {
           rating: number | null
           region: string | null
           sweetness: number | null
+          systembolaget_checked_at: string | null
+          systembolaget_url: string | null
           tannin: number | null
           type: Database["public"]["Enums"]["wine_type"]
           user_id: string
@@ -62,6 +64,8 @@ export type Database = {
           rating?: number | null
           region?: string | null
           sweetness?: number | null
+          systembolaget_checked_at?: string | null
+          systembolaget_url?: string | null
           tannin?: number | null
           type?: Database["public"]["Enums"]["wine_type"]
           user_id: string
@@ -89,6 +93,8 @@ export type Database = {
           rating?: number | null
           region?: string | null
           sweetness?: number | null
+          systembolaget_checked_at?: string | null
+          systembolaget_url?: string | null
           tannin?: number | null
           type?: Database["public"]["Enums"]["wine_type"]
           user_id?: string
@@ -117,6 +123,8 @@ export type Database = {
           rating: number | null
           region: string | null
           sweetness: number | null
+          systembolaget_checked_at: string | null
+          systembolaget_url: string | null
           tannin: number | null
           type: Database["public"]["Enums"]["wine_type"]
           updated_at: string
@@ -143,6 +151,8 @@ export type Database = {
           rating?: number | null
           region?: string | null
           sweetness?: number | null
+          systembolaget_checked_at?: string | null
+          systembolaget_url?: string | null
           tannin?: number | null
           type?: Database["public"]["Enums"]["wine_type"]
           updated_at?: string
@@ -169,6 +179,8 @@ export type Database = {
           rating?: number | null
           region?: string | null
           sweetness?: number | null
+          systembolaget_checked_at?: string | null
+          systembolaget_url?: string | null
           tannin?: number | null
           type?: Database["public"]["Enums"]["wine_type"]
           updated_at?: string
@@ -194,6 +206,8 @@ export type Database = {
           notes: string | null
           priority: Database["public"]["Enums"]["wishlist_priority"]
           region: string | null
+          systembolaget_checked_at: string | null
+          systembolaget_url: string | null
           type: Database["public"]["Enums"]["wine_type"]
           updated_at: string
           user_id: string
@@ -215,6 +229,8 @@ export type Database = {
           notes?: string | null
           priority?: Database["public"]["Enums"]["wishlist_priority"]
           region?: string | null
+          systembolaget_checked_at?: string | null
+          systembolaget_url?: string | null
           type?: Database["public"]["Enums"]["wine_type"]
           updated_at?: string
           user_id: string
@@ -236,6 +252,8 @@ export type Database = {
           notes?: string | null
           priority?: Database["public"]["Enums"]["wishlist_priority"]
           region?: string | null
+          systembolaget_checked_at?: string | null
+          systembolaget_url?: string | null
           type?: Database["public"]["Enums"]["wine_type"]
           updated_at?: string
           user_id?: string
