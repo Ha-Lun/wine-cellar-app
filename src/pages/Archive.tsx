@@ -99,10 +99,15 @@ const Archive = () => {
               </p>
             </div>
           </div>
-          <WineFilters
-            wines={drunkWines}
-            onFilteredWines={(f) => setFilteredWines(f.length === drunkWines.length ? null : f)}
-          />
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" asChild title="Wishlist">
+              <Link to="/wishlist"><Heart className="w-4 h-4" /></Link>
+            </Button>
+            <WineFilters
+              wines={drunkWines}
+              onFilteredWines={(f) => setFilteredWines(f.length === drunkWines.length ? null : f)}
+            />
+          </div>
         </div>
       </header>
 
