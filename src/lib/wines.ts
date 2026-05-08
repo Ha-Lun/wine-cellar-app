@@ -180,6 +180,9 @@ export async function getVivinoRating(query: string) {
 
 export async function fetchLabelImage(params: { name: string; winery?: string | null; vintage?: number | null }) {
   const { data, error } = await supabase.functions.invoke("fetch-label-image", { body: params });
-  if (error) return null;
-  return (data?.image_url as string | null) ?? null;
+  if (error) return { image_url: null as string | null, reason: null as string | null };
+  return {
+    image_url: (data?.image_url as string | null) ?? null,
+    reason: (data?.reason as string | null) ?? null,
+  };
 }
