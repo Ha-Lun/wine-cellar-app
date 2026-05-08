@@ -1,25 +1,63 @@
 ## Goal
 
-Switch `scan-wine-label` from direct Google Gemini API to the **Lovable AI Gateway** so the entire app uses one unified AI provider (free in promo, no `GEMINI_API_KEY` needed).
+Add a **Wishlist** page where you can save wines you don't own yet but want to buy — using the same scan-label flow as the cellar.
 
-## Changes
+## Database
 
-### `supabase/functions/scan-wine-label/index.ts`
-- Replace endpoint `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions` → `https://ai.gateway.lovable.dev/v1/chat/completions`.
-- Replace secret `GEMINI_API_KEY` → auto-provisioned `LOVABLE_API_KEY`.
-- Update model id `gemini-3-flash-preview` → `google/gemini-2.5-flash` (Lovable Gateway naming, supports vision + tool-calling).
-- Keep everything else identical: JWT auth check, image input, tool-calling for structured `wine_data` output, drinking-window prompt, 429/402 handling.
+New table `public.wishlist_wines` mirroring `wines` (minus quantity/drink-tracking fields that don't apply yet):
+- `id`, `user_id`, `created_at`, `updated_at`
+- `name`, `winery`, `region`, `country`, `vintage`, `type` (wine_type), `grape_variety`
+- `notes`, `food_pairings`, `image_url`
+- `drink_from`, `drink_until`
+- `vivino_rating`, `priority` (low/medium/high, default medium)
 
-### Cleanup
-- The `GEMINI_API_KEY` secret becomes unused. I'll leave it in place (harmless); you can delete it later in Cloud settings if you want.
+RLS: each user can view/insert/update/delete only their own rows (same pattern as `wines`).
+
+## Backend
+
+No new edge function — the wishlist reuses `scan-wine-label` and `get-vivino-rating`.
+
+New helpers in `src/lib/wines.ts` (or a new `src/lib/wishlist.ts`):
+- `fetchWishlist()`
+- `addWishlistWine(wine)`
+- `updateWishlistWine(id, updates)`
+- `deleteWishlistWine(id)`
+- `moveWishlistToCellar(id)` → inserts row into `wines` (quantity 1), deletes from wishlist
+
+## Frontend
+
+### New page `src/pages/Wishlist.tsx`
+- Same layout/style as `Index.tsx`: sticky header (with safe-area padding), filter bar by wine type, country grouping, framer-motion entry.
+- Empty state with a "Scan a wine you want" CTA.
+- Each card shows the wine info + actions:
+  - **Move to Cellar** (green primary) → calls `moveWishlistToCellar`
+  - **Edit** (reuse a small edit dialog or the existing pattern)
+  - **Remove**
+
+### New component `src/components/AddWishlistDialog.tsx`
+- Copy of `AddWineDialog` with quantity removed and a `priority` select added.
+- Same Scan / Manual tabs, same Vivino rating button.
+
+### New types
+- `WishlistWine`, `WishlistWineInsert` in `src/types/wine.ts` (auto-generated from Supabase types after migration).
+
+### Routing & nav
+- Add `<Route path="/wishlist" element={<Wishlist />} />` in `src/App.tsx`.
+- Add a Wishlist link/icon (Heart or BookmarkPlus) in the top nav of `Index.tsx`, `Archive.tsx`, and the new `Wishlist.tsx` so users can move between Cellar / Wishlist / Archive.
+
+### Reusable card
+- Either extend `WineCard` with a `variant: "cellar" | "wishlist"` prop, or create `WishlistCard.tsx` that mirrors `WineCard` but swaps the action buttons. I'll go with a separate `WishlistCard` to keep `WineCard` clean.
 
 ## Verification
 
-1. Auto-deploy edge function.
-2. Test with `curl_edge_functions` using a small base64 test payload to confirm 200 + tool-call structure.
-3. Confirm via the Add Wine → Scan Label flow in the UI.
+1. Run migration → confirm new table + RLS.
+2. Add a wine via scan and via manual entry on `/wishlist`.
+3. Move one to cellar → verify it appears in `/` and disappears from wishlist.
+4. Delete one → verify removal.
+5. Confirm logged-out users can't see the page (auth gate same as Index).
 
-## Notes
+## Out of scope (can do later)
 
-- No DB / RLS / frontend changes.
-- Same response shape as today, so `AddWineDialog.tsx` works unchanged.
+- Sharing wishlist with friends
+- Price tracking / store links
+- Notifications when a wine becomes drinkable
