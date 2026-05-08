@@ -56,6 +56,7 @@ export async function moveWishlistToCellar(id: string) {
     notes: wine.notes,
     food_pairings: wine.food_pairings,
     image_url: wine.image_url,
+    label_image_url: wine.label_image_url,
     drink_from: wine.drink_from,
     drink_until: wine.drink_until,
     vivino_rating: wine.vivino_rating,

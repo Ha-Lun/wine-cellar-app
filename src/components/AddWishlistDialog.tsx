@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { WineType, WishlistWineInsert, WishlistPriority, WineScanResult } from "@/types/wine";
-import { addWishlistWine } from "@/lib/wishlist";
-import { scanWineLabel, getVivinoRating } from "@/lib/wines";
+import { addWishlistWine, updateWishlistWine } from "@/lib/wishlist";
+import { scanWineLabel, getVivinoRating, fetchLabelImage } from "@/lib/wines";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -160,11 +160,19 @@ export function AddWishlistDialog({ onAdded }: AddWishlistDialogProps) {
         priority: form.priority,
         vivino_rating: form.vivino_rating,
       };
-      await addWishlistWine(wine);
+      const inserted = await addWishlistWine(wine);
       toast.success("Added to your wishlist!");
       resetForm();
       setOpen(false);
       onAdded();
+      fetchLabelImage({ name: wine.name, winery: wine.winery, vintage: wine.vintage })
+        .then(async (url) => {
+          if (url && inserted?.id) {
+            await updateWishlistWine(inserted.id, { label_image_url: url });
+            onAdded();
+          }
+        })
+        .catch(() => {});
     } catch (err) {
       console.error(err);
       toast.error("Failed to add wine");

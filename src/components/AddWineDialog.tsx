@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { WineType, WineInsert, WineScanResult } from "@/types/wine";
-import { addWine, scanWineLabel, getVivinoRating } from "@/lib/wines";
+import { addWine, updateWine, scanWineLabel, getVivinoRating, fetchLabelImage } from "@/lib/wines";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -173,11 +173,20 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
         quantity: parseInt(form.quantity) || 1,
         vivino_rating: form.vivino_rating,
       };
-      await addWine(wine);
+      const inserted = await addWine(wine);
       toast.success("Wine added to your cellar!");
       resetForm();
       setOpen(false);
       onAdded();
+      // Background fetch of high-quality label image
+      fetchLabelImage({ name: wine.name, winery: wine.winery, vintage: wine.vintage })
+        .then(async (url) => {
+          if (url && inserted?.id) {
+            await updateWine(inserted.id, { label_image_url: url });
+            onAdded();
+          }
+        })
+        .catch(() => {});
     } catch (err) {
       console.error(err);
       toast.error("Failed to add wine");

@@ -68,8 +68,18 @@ export function WishlistCard({ wine, onDelete, onMoveToCellar, index }: Wishlist
             </p>
           )}
         </div>
-        <div className="flex flex-col items-center">
-          <WineTypeIcon type={wine.type} />
+        <div className="flex flex-col items-center shrink-0">
+          {wine.label_image_url ? (
+            <img
+              src={wine.label_image_url}
+              alt={`${wine.name} label`}
+              loading="lazy"
+              className="w-16 h-20 object-cover rounded-md border border-border bg-muted"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+            />
+          ) : (
+            <WineTypeIcon type={wine.type} />
+          )}
         </div>
       </div>
 

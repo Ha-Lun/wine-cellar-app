@@ -27,6 +27,7 @@ export type Database = {
           grape_variety: string | null
           id: string
           image_url: string | null
+          label_image_url: string | null
           name: string
           notes: string | null
           original_created_at: string | null
@@ -53,6 +54,7 @@ export type Database = {
           grape_variety?: string | null
           id?: string
           image_url?: string | null
+          label_image_url?: string | null
           name: string
           notes?: string | null
           original_created_at?: string | null
@@ -79,6 +81,7 @@ export type Database = {
           grape_variety?: string | null
           id?: string
           image_url?: string | null
+          label_image_url?: string | null
           name?: string
           notes?: string | null
           original_created_at?: string | null
@@ -107,6 +110,7 @@ export type Database = {
           grape_variety: string | null
           id: string
           image_url: string | null
+          label_image_url: string | null
           name: string
           notes: string | null
           quantity: number
@@ -132,6 +136,7 @@ export type Database = {
           grape_variety?: string | null
           id?: string
           image_url?: string | null
+          label_image_url?: string | null
           name: string
           notes?: string | null
           quantity?: number
@@ -157,6 +162,7 @@ export type Database = {
           grape_variety?: string | null
           id?: string
           image_url?: string | null
+          label_image_url?: string | null
           name?: string
           notes?: string | null
           quantity?: number
@@ -183,6 +189,7 @@ export type Database = {
           grape_variety: string | null
           id: string
           image_url: string | null
+          label_image_url: string | null
           name: string
           notes: string | null
           priority: Database["public"]["Enums"]["wishlist_priority"]
@@ -203,6 +210,7 @@ export type Database = {
           grape_variety?: string | null
           id?: string
           image_url?: string | null
+          label_image_url?: string | null
           name: string
           notes?: string | null
           priority?: Database["public"]["Enums"]["wishlist_priority"]
@@ -223,6 +231,7 @@ export type Database = {
           grape_variety?: string | null
           id?: string
           image_url?: string | null
+          label_image_url?: string | null
           name?: string
           notes?: string | null
           priority?: Database["public"]["Enums"]["wishlist_priority"]
