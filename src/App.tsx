@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Archive from "./pages/Archive";
 import Wishlist from "./pages/Wishlist";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/archive" element={<Archive />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
