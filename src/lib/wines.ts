@@ -134,6 +134,7 @@ export async function restoreToCellar(drunkWineId: string) {
         rating: wine.rating,
         vivino_rating: wine.vivino_rating,
         image_url: wine.image_url,
+        label_image_url: wine.label_image_url,
         drink_from: wine.drink_from,
         drink_until: wine.drink_until,
         body: wine.body,
