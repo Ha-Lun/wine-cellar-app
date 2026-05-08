@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { WineType, WishlistWineInsert, WishlistPriority, WineScanResult } from "@/types/wine";
-import { addWishlistWine } from "@/lib/wishlist";
-import { scanWineLabel, getVivinoRating } from "@/lib/wines";
+import { addWishlistWine, updateWishlistWine } from "@/lib/wishlist";
+import { scanWineLabel, getVivinoRating, fetchLabelImage } from "@/lib/wines";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
