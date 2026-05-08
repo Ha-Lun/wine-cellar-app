@@ -7,7 +7,7 @@ const corsHeaders = {
 
 async function callAI(apiKey: string, messages: any[], useTools = false) {
   const body: any = {
-    model: "gemini-3-flash-preview",
+    model: "google/gemini-2.5-flash",
     messages,
   };
 
@@ -41,7 +41,7 @@ async function callAI(apiKey: string, messages: any[], useTools = false) {
     body.tool_choice = { type: "function", function: { name: "wine_data" } };
   }
 
-  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -55,8 +55,8 @@ async function callAI(apiKey: string, messages: any[], useTools = false) {
     if (status === 429) throw { status: 429, message: "Rate limit exceeded, please try again later." };
     if (status === 402) throw { status: 402, message: "AI credits exhausted. Please add funds." };
     const errText = await response.text();
-    console.error("Gemini API error:", status, errText);
-    throw { status: 500, message: "Gemini API error" };
+    console.error("Lovable AI error:", status, errText);
+    throw { status: 500, message: "AI request failed" };
   }
 
   return await response.json();
@@ -101,16 +101,16 @@ serve(async (req) => {
       });
     }
 
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     // ── Step 1 & 2 Combined: Extract, verify, and enrich from the image directly ──
     console.log("Analyzing wine label and enriching data...");
     
     const analysisResponse = await callAI(
-      GEMINI_API_KEY,
+      LOVABLE_API_KEY,
       [
         {
           role: "system",

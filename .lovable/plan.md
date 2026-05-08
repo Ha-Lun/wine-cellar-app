@@ -1,42 +1,25 @@
-## Problem
+## Goal
 
-The current `get-vivino-rating` edge function scrapes vivino.com directly (and falls back to DuckDuckGo HTML search). Both routes are unreliable:
-- Vivino is behind Cloudflare bot protection — the Googlebot UA trick fails most of the time.
-- The DuckDuckGo HTML endpoint frequently returns no usable snippet, and the regex is brittle.
-- Result: users almost always get "Could not find a Vivino rating".
-
-## Solution
-
-Replace the scraping logic with a call to the **Lovable AI Gateway** (free during the promo window, fast, no API key needed beyond the auto-provisioned `LOVABLE_API_KEY`). Ask the model to return its best estimate of the wine's Vivino rating as strict JSON.
-
-This is not a live scrape of vivino.com, but it gives a realistic rating estimate based on the model's training data — which is what users actually want from the "Check Rating" button. We'll be transparent in the UI label.
+Switch `scan-wine-label` from direct Google Gemini API to the **Lovable AI Gateway** so the entire app uses one unified AI provider (free in promo, no `GEMINI_API_KEY` needed).
 
 ## Changes
 
-### 1. `supabase/functions/get-vivino-rating/index.ts`
-- Remove all Vivino + DuckDuckGo fetch code.
-- Keep JWT auth check + CORS.
-- Validate `query` input.
-- Call `https://ai.gateway.lovable.dev/v1/chat/completions` with:
-  - Model: `google/gemini-2.5-flash` (fast + cheap + free in promo).
-  - System prompt: "You are a wine rating expert. Given a wine name and vintage, return its approximate Vivino community rating (0.0–5.0)."
-  - `response_format: { type: "json_object" }` so we get `{ "rating": 4.2 }` reliably.
-- Handle 429 (rate limit) → 429 response with friendly message.
-- Handle 402 (credits exhausted) → 402 response.
-- Return `{ rating: number | null }` matching the existing client contract.
+### `supabase/functions/scan-wine-label/index.ts`
+- Replace endpoint `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions` → `https://ai.gateway.lovable.dev/v1/chat/completions`.
+- Replace secret `GEMINI_API_KEY` → auto-provisioned `LOVABLE_API_KEY`.
+- Update model id `gemini-3-flash-preview` → `google/gemini-2.5-flash` (Lovable Gateway naming, supports vision + tool-calling).
+- Keep everything else identical: JWT auth check, image input, tool-calling for structured `wine_data` output, drinking-window prompt, 429/402 handling.
 
-### 2. `src/components/AddWineDialog.tsx` (minor)
-- Update the label "Vivino Rating" → "Estimated Rating" (or keep "Vivino Rating" with a tooltip — see question below) so users understand it's an AI estimate, not a scrape.
-
-### 3. No DB / RLS / types changes needed.
+### Cleanup
+- The `GEMINI_API_KEY` secret becomes unused. I'll leave it in place (harmless); you can delete it later in Cloud settings if you want.
 
 ## Verification
 
-1. Deploy edge function (automatic).
-2. Use `supabase--curl_edge_functions` to POST `{ "query": "Château Margaux 2015" }` and confirm a sensible numeric rating comes back.
-3. Check `supabase--edge_function_logs` for any errors.
-4. Try in the UI from the Add Wine dialog.
+1. Auto-deploy edge function.
+2. Test with `curl_edge_functions` using a small base64 test payload to confirm 200 + tool-call structure.
+3. Confirm via the Add Wine → Scan Label flow in the UI.
 
-## Question for you
+## Notes
 
-Before I implement, one decision:
+- No DB / RLS / frontend changes.
+- Same response shape as today, so `AddWineDialog.tsx` works unchanged.
