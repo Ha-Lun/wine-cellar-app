@@ -67,6 +67,8 @@ export async function markWineAsDrunk(wineId: string) {
       tannin: wine.tannin,
       sweetness: wine.sweetness,
       acidity: wine.acidity,
+      systembolaget_url: wine.systembolaget_url,
+      systembolaget_checked_at: wine.systembolaget_checked_at,
       quantity: 1,
       original_created_at: wine.created_at,
     });
@@ -141,6 +143,8 @@ export async function restoreToCellar(drunkWineId: string) {
         tannin: wine.tannin,
         sweetness: wine.sweetness,
         acidity: wine.acidity,
+        systembolaget_url: wine.systembolaget_url,
+        systembolaget_checked_at: wine.systembolaget_checked_at,
         quantity: wine.quantity,
       });
     if (insertError) throw insertError;
