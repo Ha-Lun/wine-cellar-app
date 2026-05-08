@@ -23,6 +23,7 @@ const App = () => (
           <Route path="/archive" element={<Archive />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
