@@ -38,6 +38,7 @@ export type Database = {
           type: Database["public"]["Enums"]["wine_type"]
           user_id: string
           vintage: number | null
+          vivino_rating: number | null
           winery: string | null
         }
         Insert: {
@@ -63,6 +64,7 @@ export type Database = {
           type?: Database["public"]["Enums"]["wine_type"]
           user_id: string
           vintage?: number | null
+          vivino_rating?: number | null
           winery?: string | null
         }
         Update: {
@@ -88,6 +90,7 @@ export type Database = {
           type?: Database["public"]["Enums"]["wine_type"]
           user_id?: string
           vintage?: number | null
+          vivino_rating?: number | null
           winery?: string | null
         }
         Relationships: []
@@ -115,6 +118,7 @@ export type Database = {
           updated_at: string
           user_id: string
           vintage: number | null
+          vivino_rating: number | null
           winery: string | null
         }
         Insert: {
@@ -139,6 +143,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           vintage?: number | null
+          vivino_rating?: number | null
           winery?: string | null
         }
         Update: {
@@ -163,6 +168,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           vintage?: number | null
+          vivino_rating?: number | null
           winery?: string | null
         }
         Relationships: []
