@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Archive from "./pages/Archive";
 import Wishlist from "./pages/Wishlist";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
