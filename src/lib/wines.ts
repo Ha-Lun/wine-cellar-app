@@ -186,3 +186,12 @@ export async function fetchLabelImage(params: { name: string; winery?: string | 
     reason: (data?.reason as string | null) ?? null,
   };
 }
+
+export async function checkSystembolaget(params: { name: string; winery?: string | null; vintage?: number | null }) {
+  const { data, error } = await supabase.functions.invoke("check-systembolaget", { body: params });
+  if (error) return { url: null as string | null, reason: null as string | null };
+  return {
+    url: (data?.url as string | null) ?? null,
+    reason: (data?.reason as string | null) ?? null,
+  };
+}
