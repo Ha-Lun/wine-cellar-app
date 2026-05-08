@@ -14,6 +14,7 @@ import { Grape, Calendar } from "lucide-react";
 import { WineRatingDialog } from "@/components/WineRatingDialog";
 import { EditWineDialog } from "@/components/EditWineDialog";
 import { WineFilters } from "@/components/WineFilters";
+import { SystembolagetLink } from "@/components/SystembolagetLink";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -186,6 +187,13 @@ const Archive = () => {
                   {wine.notes && (
                     <p className="mt-2 text-sm text-muted-foreground italic line-clamp-2">"{wine.notes}"</p>
                   )}
+                  <div className="mt-2">
+                    <SystembolagetLink
+                      url={wine.systembolaget_url}
+                      checkedAt={wine.systembolaget_checked_at}
+                      query={[wine.winery, wine.name, wine.vintage].filter(Boolean).join(" ")}
+                    />
+                  </div>
 
                   {/* Action buttons - bottom left */}
                   <div className="absolute bottom-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

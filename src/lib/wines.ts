@@ -67,6 +67,8 @@ export async function markWineAsDrunk(wineId: string) {
       tannin: wine.tannin,
       sweetness: wine.sweetness,
       acidity: wine.acidity,
+      systembolaget_url: wine.systembolaget_url,
+      systembolaget_checked_at: wine.systembolaget_checked_at,
       quantity: 1,
       original_created_at: wine.created_at,
     });
@@ -141,6 +143,8 @@ export async function restoreToCellar(drunkWineId: string) {
         tannin: wine.tannin,
         sweetness: wine.sweetness,
         acidity: wine.acidity,
+        systembolaget_url: wine.systembolaget_url,
+        systembolaget_checked_at: wine.systembolaget_checked_at,
         quantity: wine.quantity,
       });
     if (insertError) throw insertError;
@@ -183,6 +187,15 @@ export async function fetchLabelImage(params: { name: string; winery?: string | 
   if (error) return { image_url: null as string | null, reason: null as string | null };
   return {
     image_url: (data?.image_url as string | null) ?? null,
+    reason: (data?.reason as string | null) ?? null,
+  };
+}
+
+export async function checkSystembolaget(params: { name: string; winery?: string | null; vintage?: number | null }) {
+  const { data, error } = await supabase.functions.invoke("check-systembolaget", { body: params });
+  if (error) return { url: null as string | null, reason: null as string | null };
+  return {
+    url: (data?.url as string | null) ?? null,
     reason: (data?.reason as string | null) ?? null,
   };
 }

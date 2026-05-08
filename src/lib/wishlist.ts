@@ -60,6 +60,8 @@ export async function moveWishlistToCellar(id: string) {
     drink_from: wine.drink_from,
     drink_until: wine.drink_until,
     vivino_rating: wine.vivino_rating,
+    systembolaget_url: wine.systembolaget_url,
+    systembolaget_checked_at: wine.systembolaget_checked_at,
     quantity: 1,
   });
   if (insertError) throw insertError;

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { WineRatingDialog } from "@/components/WineRatingDialog";
 import { EditWineDialog } from "@/components/EditWineDialog";
+import { SystembolagetLink } from "@/components/SystembolagetLink";
 
 const typeConfig: Record<WineType, { label: string; className: string; iconColor: string }> = {
   red: { label: "Red", className: "bg-wine-red text-primary-foreground", iconColor: "text-[#722F37]" },
@@ -168,6 +169,14 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
           "{wine.notes}"
         </p>
       )}
+
+      <div className="mt-2">
+        <SystembolagetLink
+          url={wine.systembolaget_url}
+          checkedAt={wine.systembolaget_checked_at}
+          query={[wine.winery, wine.name, wine.vintage].filter(Boolean).join(" ")}
+        />
+      </div>
 
       <div className="mt-auto pt-4 border-t flex items-center justify-end gap-1">
         <Button

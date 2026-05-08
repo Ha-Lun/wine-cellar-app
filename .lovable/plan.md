@@ -1,48 +1,43 @@
 ## Goal
-Fetch a higher-quality wine label image from the web (instead of relying on the user's scan photo) and store it as a separate field on each wine across cellar, wishlist, and archive.
+Show a Systembolaget link on each wine. If the wine is found there, link directly to the product page; otherwise show "Not available at Systembolaget" with a link to https://www.systembolaget.se/.
 
 ## Approach
-Use the **Firecrawl** connector to search the web (Vivino results in particular) for the wine's official label image. Run automatically when a wine is added or scanned. The user's scan photo stays untouched; the new image is shown by default with a fallback to the scan if no result is found.
+Reuse the existing **Firecrawl** connector. On wine add/scan, search Systembolaget and store either the product URL or a "not available" marker. Cached forever (no auto re-check).
 
 ## Steps
 
-### 1. Connect Firecrawl
-- Use the Firecrawl connector (set up via `standard_connectors--connect`) — `FIRECRAWL_API_KEY` becomes available to edge functions.
+### 1. Database migration
+Add two nullable columns to `wines`, `wishlist_wines`, and `drunk_wines`:
+- `systembolaget_url text` — direct product link if found
+- `systembolaget_checked_at timestamptz` — non-null means we've already looked it up (used to distinguish "not checked yet" from "checked, not available")
 
-### 2. Database migration
-Add a nullable `label_image_url text` column to:
-- `wines`
-- `wishlist_wines`
-- `drunk_wines`
-
-(Keep existing `image_url` for the user's scan photo.)
-
-### 3. New edge function: `fetch-label-image`
+### 2. New edge function: `check-systembolaget`
 - Input: `{ name, winery?, vintage? }`
-- Calls Firecrawl `search` (`site:vivino.com` + wine name/winery/vintage), requesting screenshot/branding or parsing the result page for the bottle image URL.
-- Returns `{ image_url: string | null }`.
-- JWT-protected, CORS, 402/429 handling.
+- Calls Firecrawl `search` with `site:systembolaget.se/produkt {winery} {name} {vintage}`, limit 3.
+- Filters results to URLs matching `https://www.systembolaget.se/produkt/...`.
+- Returns `{ url: string | null, reason?: "no_credits" | "rate_limited" }`.
+- JWT-protected, CORS, same 402/429 handling as the label-image function.
 
-### 4. Wire into add flows
-After a successful insert in:
-- `AddWineDialog` (cellar)
-- `AddWishlistDialog` (wishlist)
+### 3. Wire into add flows
+In `AddWineDialog` and `AddWishlistDialog`, after the existing `fetchLabelImage` background call, also call `checkSystembolaget` (in parallel). On success, update the row with `systembolaget_url` (may be null) and set `systembolaget_checked_at = now()`. Show the same credit-limit / rate-limit toast pattern.
 
-Trigger `fetch-label-image` in the background; on success update the row's `label_image_url`. Non-blocking — the wine is saved immediately even if fetching fails.
+Add a helper in `src/lib/wines.ts`: `checkSystembolaget(params)`.
 
-### 5. Display
-- `WineCard`, `WishlistCard`, archive card: prefer `label_image_url`, fall back to `image_url`, then to the existing placeholder.
-- Add a small "Refresh image" action in the edit dialogs to retry manually.
+### 4. Display
+In `WineCard`, `WishlistCard`, and the Archive card, add a small link/badge under the rating row:
+- If `systembolaget_url` set → link "Buy on Systembolaget ↗" (opens in new tab).
+- Else if `systembolaget_checked_at` set → muted text "Not available · Systembolaget ↗" linking to https://www.systembolaget.se/.
+- Else (not checked yet — old wines) → nothing, OR a small "Check Systembolaget" button that triggers the lookup on demand. Out of scope unless requested.
 
-### 6. Backfill (optional)
-A one-shot button in settings (or just leave existing wines as-is) to fetch label images for wines that don't have one yet. Out of scope unless requested.
+Use a small Systembolaget-yellow accent (`#FFD500`) for the available state, muted-foreground for unavailable.
 
 ## Technical notes
-- Firecrawl search with `scrapeOptions.formats: ['html']` + `site:vivino.com {wine}` → parse the first `og:image` or product image meta tag.
-- Store the remote URL directly (no Supabase Storage upload needed) — Vivino image CDN URLs are stable.
-- Failure modes: Firecrawl 402 (no credits) → return null silently; UI keeps fallback image.
+- Systembolaget product URL pattern: `https://www.systembolaget.se/produkt/{category}/{slug}/{article-id}` — any result containing `/produkt/` is treated as a hit.
+- Search URL fallback: `https://www.systembolaget.se/sok/?q={encoded query}`.
+- Cache forever per the user's choice; users can clear by removing/re-adding the wine.
 
 ## Out of scope
-- Re-uploading/hosting images on Supabase Storage
-- Bulk backfill UI
-- Image moderation/cropping
+- Backfill for existing wines
+- Price scraping
+- Stock-level / store-availability check
+- Periodic re-checks
