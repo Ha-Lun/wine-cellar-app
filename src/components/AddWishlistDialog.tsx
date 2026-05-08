@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { WineType, WishlistWineInsert, WishlistPriority, WineScanResult } from "@/types/wine";
 import { addWishlistWine, updateWishlistWine } from "@/lib/wishlist";
-import { scanWineLabel, getVivinoRating, fetchLabelImage } from "@/lib/wines";
+import { scanWineLabel, getVivinoRating, fetchLabelImage, checkSystembolaget } from "@/lib/wines";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -177,6 +177,19 @@ export function AddWishlistDialog({ onAdded }: AddWishlistDialogProps) {
           }
           if (image_url && inserted?.id) {
             await updateWishlistWine(inserted.id, { label_image_url: image_url });
+            onAdded();
+          }
+        })
+        .catch(() => {});
+
+      checkSystembolaget({ name: wine.name, winery: wine.winery, vintage: wine.vintage })
+        .then(async ({ url, reason }) => {
+          if (reason === "no_credits" || reason === "rate_limited") return;
+          if (inserted?.id) {
+            await updateWishlistWine(inserted.id, {
+              systembolaget_url: url,
+              systembolaget_checked_at: new Date().toISOString(),
+            });
             onAdded();
           }
         })
