@@ -116,6 +116,14 @@ export function WishlistCard({ wine, onDelete, onMoveToCellar, index }: Wishlist
         <p className="mt-2 text-sm text-muted-foreground italic line-clamp-2">"{wine.notes}"</p>
       )}
 
+      <div className="mt-2">
+        <SystembolagetLink
+          url={wine.systembolaget_url}
+          checkedAt={wine.systembolaget_checked_at}
+          query={[wine.winery, wine.name, wine.vintage].filter(Boolean).join(" ")}
+        />
+      </div>
+
       <div className="mt-auto pt-4 border-t flex items-center justify-end gap-1">
         <Button
           variant="default"
