@@ -152,8 +152,18 @@ const Archive = () => {
                         </p>
                       )}
                     </div>
-                    <div className="flex flex-col items-center">
-                      <WineTypeIcon type={wine.type as WineType} />
+                    <div className="flex flex-col items-center shrink-0">
+                      {wine.label_image_url ? (
+                        <img
+                          src={wine.label_image_url}
+                          alt={`${wine.name} label`}
+                          loading="lazy"
+                          className="w-16 h-20 object-cover rounded-md border border-border bg-muted"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                        />
+                      ) : (
+                        <WineTypeIcon type={wine.type as WineType} />
+                      )}
                     </div>
                   </div>
                   <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
