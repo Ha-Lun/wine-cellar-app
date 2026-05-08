@@ -1,63 +1,48 @@
 ## Goal
+Fetch a higher-quality wine label image from the web (instead of relying on the user's scan photo) and store it as a separate field on each wine across cellar, wishlist, and archive.
 
-Add a **Wishlist** page where you can save wines you don't own yet but want to buy — using the same scan-label flow as the cellar.
+## Approach
+Use the **Firecrawl** connector to search the web (Vivino results in particular) for the wine's official label image. Run automatically when a wine is added or scanned. The user's scan photo stays untouched; the new image is shown by default with a fallback to the scan if no result is found.
 
-## Database
+## Steps
 
-New table `public.wishlist_wines` mirroring `wines` (minus quantity/drink-tracking fields that don't apply yet):
-- `id`, `user_id`, `created_at`, `updated_at`
-- `name`, `winery`, `region`, `country`, `vintage`, `type` (wine_type), `grape_variety`
-- `notes`, `food_pairings`, `image_url`
-- `drink_from`, `drink_until`
-- `vivino_rating`, `priority` (low/medium/high, default medium)
+### 1. Connect Firecrawl
+- Use the Firecrawl connector (set up via `standard_connectors--connect`) — `FIRECRAWL_API_KEY` becomes available to edge functions.
 
-RLS: each user can view/insert/update/delete only their own rows (same pattern as `wines`).
+### 2. Database migration
+Add a nullable `label_image_url text` column to:
+- `wines`
+- `wishlist_wines`
+- `drunk_wines`
 
-## Backend
+(Keep existing `image_url` for the user's scan photo.)
 
-No new edge function — the wishlist reuses `scan-wine-label` and `get-vivino-rating`.
+### 3. New edge function: `fetch-label-image`
+- Input: `{ name, winery?, vintage? }`
+- Calls Firecrawl `search` (`site:vivino.com` + wine name/winery/vintage), requesting screenshot/branding or parsing the result page for the bottle image URL.
+- Returns `{ image_url: string | null }`.
+- JWT-protected, CORS, 402/429 handling.
 
-New helpers in `src/lib/wines.ts` (or a new `src/lib/wishlist.ts`):
-- `fetchWishlist()`
-- `addWishlistWine(wine)`
-- `updateWishlistWine(id, updates)`
-- `deleteWishlistWine(id)`
-- `moveWishlistToCellar(id)` → inserts row into `wines` (quantity 1), deletes from wishlist
+### 4. Wire into add flows
+After a successful insert in:
+- `AddWineDialog` (cellar)
+- `AddWishlistDialog` (wishlist)
 
-## Frontend
+Trigger `fetch-label-image` in the background; on success update the row's `label_image_url`. Non-blocking — the wine is saved immediately even if fetching fails.
 
-### New page `src/pages/Wishlist.tsx`
-- Same layout/style as `Index.tsx`: sticky header (with safe-area padding), filter bar by wine type, country grouping, framer-motion entry.
-- Empty state with a "Scan a wine you want" CTA.
-- Each card shows the wine info + actions:
-  - **Move to Cellar** (green primary) → calls `moveWishlistToCellar`
-  - **Edit** (reuse a small edit dialog or the existing pattern)
-  - **Remove**
+### 5. Display
+- `WineCard`, `WishlistCard`, archive card: prefer `label_image_url`, fall back to `image_url`, then to the existing placeholder.
+- Add a small "Refresh image" action in the edit dialogs to retry manually.
 
-### New component `src/components/AddWishlistDialog.tsx`
-- Copy of `AddWineDialog` with quantity removed and a `priority` select added.
-- Same Scan / Manual tabs, same Vivino rating button.
+### 6. Backfill (optional)
+A one-shot button in settings (or just leave existing wines as-is) to fetch label images for wines that don't have one yet. Out of scope unless requested.
 
-### New types
-- `WishlistWine`, `WishlistWineInsert` in `src/types/wine.ts` (auto-generated from Supabase types after migration).
+## Technical notes
+- Firecrawl search with `scrapeOptions.formats: ['html']` + `site:vivino.com {wine}` → parse the first `og:image` or product image meta tag.
+- Store the remote URL directly (no Supabase Storage upload needed) — Vivino image CDN URLs are stable.
+- Failure modes: Firecrawl 402 (no credits) → return null silently; UI keeps fallback image.
 
-### Routing & nav
-- Add `<Route path="/wishlist" element={<Wishlist />} />` in `src/App.tsx`.
-- Add a Wishlist link/icon (Heart or BookmarkPlus) in the top nav of `Index.tsx`, `Archive.tsx`, and the new `Wishlist.tsx` so users can move between Cellar / Wishlist / Archive.
-
-### Reusable card
-- Either extend `WineCard` with a `variant: "cellar" | "wishlist"` prop, or create `WishlistCard.tsx` that mirrors `WineCard` but swaps the action buttons. I'll go with a separate `WishlistCard` to keep `WineCard` clean.
-
-## Verification
-
-1. Run migration → confirm new table + RLS.
-2. Add a wine via scan and via manual entry on `/wishlist`.
-3. Move one to cellar → verify it appears in `/` and disappears from wishlist.
-4. Delete one → verify removal.
-5. Confirm logged-out users can't see the page (auth gate same as Index).
-
-## Out of scope (can do later)
-
-- Sharing wishlist with friends
-- Price tracking / store links
-- Notifications when a wine becomes drinkable
+## Out of scope
+- Re-uploading/hosting images on Supabase Storage
+- Bulk backfill UI
+- Image moderation/cropping
