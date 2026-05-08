@@ -173,6 +173,69 @@ export type Database = {
         }
         Relationships: []
       }
+      wishlist_wines: {
+        Row: {
+          country: string | null
+          created_at: string
+          drink_from: number | null
+          drink_until: number | null
+          food_pairings: string[] | null
+          grape_variety: string | null
+          id: string
+          image_url: string | null
+          name: string
+          notes: string | null
+          priority: Database["public"]["Enums"]["wishlist_priority"]
+          region: string | null
+          type: Database["public"]["Enums"]["wine_type"]
+          updated_at: string
+          user_id: string
+          vintage: number | null
+          vivino_rating: number | null
+          winery: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          drink_from?: number | null
+          drink_until?: number | null
+          food_pairings?: string[] | null
+          grape_variety?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["wishlist_priority"]
+          region?: string | null
+          type?: Database["public"]["Enums"]["wine_type"]
+          updated_at?: string
+          user_id: string
+          vintage?: number | null
+          vivino_rating?: number | null
+          winery?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          drink_from?: number | null
+          drink_until?: number | null
+          food_pairings?: string[] | null
+          grape_variety?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["wishlist_priority"]
+          region?: string | null
+          type?: Database["public"]["Enums"]["wine_type"]
+          updated_at?: string
+          user_id?: string
+          vintage?: number | null
+          vivino_rating?: number | null
+          winery?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -182,6 +245,7 @@ export type Database = {
     }
     Enums: {
       wine_type: "red" | "white" | "champagne" | "sparkling"
+      wishlist_priority: "low" | "medium" | "high"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -310,6 +374,7 @@ export const Constants = {
   public: {
     Enums: {
       wine_type: ["red", "white", "champagne", "sparkling"],
+      wishlist_priority: ["low", "medium", "high"],
     },
   },
 } as const

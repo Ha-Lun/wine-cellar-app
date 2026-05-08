@@ -4,7 +4,7 @@ import { fetchDrunkWines, restoreToCellar } from "@/lib/wines";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthForm } from "@/components/AuthForm";
 import { Badge } from "@/components/ui/badge";
-import { Wine, Loader2, GlassWater, ArrowLeft, Star, Pencil, ArchiveRestore, Trash2, Sparkles } from "lucide-react";
+import { Wine, Loader2, GlassWater, ArrowLeft, Star, Pencil, ArchiveRestore, Trash2, Sparkles, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -99,10 +99,15 @@ const Archive = () => {
               </p>
             </div>
           </div>
-          <WineFilters
-            wines={drunkWines}
-            onFilteredWines={(f) => setFilteredWines(f.length === drunkWines.length ? null : f)}
-          />
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" asChild title="Wishlist">
+              <Link to="/wishlist"><Heart className="w-4 h-4" /></Link>
+            </Button>
+            <WineFilters
+              wines={drunkWines}
+              onFilteredWines={(f) => setFilteredWines(f.length === drunkWines.length ? null : f)}
+            />
+          </div>
         </div>
       </header>
 
