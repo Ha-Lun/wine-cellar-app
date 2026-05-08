@@ -11,7 +11,6 @@ serve(async (req) => {
   }
 
   try {
-    // Validate JWT authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -21,87 +20,87 @@ serve(async (req) => {
     }
 
     const { query } = await req.json();
-    if (!query) {
+    if (!query || typeof query !== "string") {
       return new Response(JSON.stringify({ error: "Query is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log("Fetching Vivino rating for:", query);
-
-    let rating = null;
-
-    try {
-      // Use Googlebot User-Agent which often bypasses strict Cloudflare bot checks
-      const response = await fetch(`https://www.vivino.com/search/wines?q=${encodeURIComponent(query)}`, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.5"
-        }
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: "AI not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
 
-      if (response.ok) {
-        const html = await response.text();
-        
-        // Look for average_rating or ratings_average
-        const match = html.match(/(?:average_rating|ratings_average)":\s*"?([\d\.]+)"?/);
-        if (match) {
-          rating = parseFloat(match[1]);
-        } else {
-          // Fallback regex for HTML elements
-          const fallbackMatch = html.match(/>([\d\.]+)<.*?stars/i);
-          if (fallbackMatch) {
-            rating = parseFloat(fallbackMatch[1]);
-          }
-        }
-      } else {
-        console.warn(`Vivino request failed with status: ${response.status}`);
+    console.log("Estimating Vivino rating for:", query);
+
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a wine expert with deep knowledge of Vivino community ratings. Given a wine name (and optional vintage), respond with your best estimate of the wine's Vivino community rating on a 0.0 to 5.0 scale. Respond ONLY as JSON: {\"rating\": <number between 0 and 5, one decimal>} or {\"rating\": null} if you have no reasonable estimate. No prose.",
+          },
+          { role: "user", content: query },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    });
+
+    if (aiRes.status === 429) {
+      return new Response(JSON.stringify({ error: "Rate limit exceeded, try again shortly" }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (aiRes.status === 402) {
+      return new Response(JSON.stringify({ error: "AI credits exhausted" }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!aiRes.ok) {
+      const text = await aiRes.text();
+      console.error("AI gateway error:", aiRes.status, text);
+      return new Response(JSON.stringify({ error: "AI request failed" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const data = await aiRes.json();
+    const content = data?.choices?.[0]?.message?.content ?? "{}";
+    let rating: number | null = null;
+    try {
+      const parsed = JSON.parse(content);
+      const r = parsed?.rating;
+      if (typeof r === "number" && r >= 0 && r <= 5) {
+        rating = Math.round(r * 10) / 10;
       }
     } catch (e) {
-      console.warn("Direct Vivino fetch failed:", e);
+      console.warn("Failed to parse AI JSON:", content);
     }
 
-    // Fallback to DuckDuckGo search if direct Vivino fetch failed or found no rating
-    if (!rating) {
-      console.log("Falling back to DuckDuckGo search");
-      try {
-        const ddgResponse = await fetch(`https://html.duckduckgo.com/html/?q=site:vivino.com+${encodeURIComponent(query)}+"average+rating"`, {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-          }
-        });
-        
-        if (ddgResponse.ok) {
-          const ddgHtml = await ddgResponse.text();
-          // Look for rating in snippets like: "Average rating of 4.2 from" or "4.2 stars"
-          const ddgMatch = ddgHtml.match(/(?:Average rating[^0-9]+|Average of\s+|Rating:\s*)([0-5]\.\d)/i) 
-                        || ddgHtml.match(/([0-5]\.\d)\s*(?:stars|out of 5)/i);
-          if (ddgMatch) {
-            rating = parseFloat(ddgMatch[1]);
-          }
-        }
-      } catch (e) {
-        console.error("DuckDuckGo fallback failed:", e);
-      }
-    }
-
-    console.log("Extracted rating:", rating);
+    console.log("Estimated rating:", rating);
 
     return new Response(JSON.stringify({ rating }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
     console.error("get-vivino-rating error:", e);
-    const status = e?.status || 500;
-    const message = e?.message || (e instanceof Error ? e.message : "Unknown error");
     return new Response(
-      JSON.stringify({ error: message }),
-      {
-        status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ error: e?.message || "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
