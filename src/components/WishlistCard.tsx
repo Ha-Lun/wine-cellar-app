@@ -4,6 +4,7 @@ import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed, Star, Spark
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SystembolagetLink } from "@/components/SystembolagetLink";
+import { LabelImage } from "@/components/LabelImage";
 
 const typeConfig: Record<WineType, { label: string; className: string; iconColor: string }> = {
   red: { label: "Red", className: "bg-wine-red text-primary-foreground", iconColor: "text-[#722F37]" },
