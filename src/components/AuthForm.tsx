@@ -96,7 +96,27 @@ export function AuthForm() {
               </TabsList>
               <TabsContent value="signin" className="space-y-4 mt-4">
                 <div><Label htmlFor="email-in">Email</Label><Input id="email-in" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-                <div><Label htmlFor="pass-in">Password</Label><Input id="pass-in" type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+                <div>
+                  <Label htmlFor="pass-in">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="pass-in"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute inset-y-0 right-0 flex items-center justify-center w-10 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
                 <Button className="w-full" onClick={() => handleSubmit("signin")} disabled={loading}>
                   {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Sign In
                 </Button>
@@ -109,7 +129,27 @@ export function AuthForm() {
               </TabsContent>
               <TabsContent value="signup" className="space-y-4 mt-4">
                 <div><Label htmlFor="email-up">Email</Label><Input id="email-up" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-                <div><Label htmlFor="pass-up">Password</Label><Input id="pass-up" type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+                <div>
+                  <Label htmlFor="pass-up">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="pass-up"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute inset-y-0 right-0 flex items-center justify-center w-10 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
                 <Button className="w-full" onClick={() => handleSubmit("signup")} disabled={loading}>
                   {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Create Account
                 </Button>
