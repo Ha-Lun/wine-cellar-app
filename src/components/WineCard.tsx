@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { WineRatingDialog } from "@/components/WineRatingDialog";
 import { EditWineDialog } from "@/components/EditWineDialog";
 import { SystembolagetLink } from "@/components/SystembolagetLink";
+import { LabelImage } from "@/components/LabelImage";
 
 const typeConfig: Record<WineType, { label: string; className: string; iconColor: string }> = {
   red: { label: "Red", className: "bg-wine-red text-primary-foreground", iconColor: "text-[#722F37]" },
