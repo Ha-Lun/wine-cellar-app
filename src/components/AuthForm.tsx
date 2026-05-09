@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wine, Loader2, ArrowLeft } from "lucide-react";
+import { Wine, Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -14,6 +14,28 @@ export function AuthForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const PasswordInput = ({ id }: { id: string }) => (
+    <div className="relative">
+      <Input
+        id={id}
+        type={showPassword ? "text" : "password"}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="pr-10"
+      />
+      <button
+        type="button"
+        onClick={() => setShowPassword((v) => !v)}
+        className="absolute inset-y-0 right-0 flex items-center justify-center w-10 text-muted-foreground hover:text-foreground transition-colors"
+        aria-label={showPassword ? "Hide password" : "Show password"}
+        tabIndex={-1}
+      >
+        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </button>
+    </div>
+  );
 
   const handleSubmit = async (action: "signin" | "signup") => {
     if (!email || !password) {
