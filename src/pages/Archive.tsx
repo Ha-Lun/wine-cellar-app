@@ -15,6 +15,7 @@ import { WineRatingDialog } from "@/components/WineRatingDialog";
 import { EditWineDialog } from "@/components/EditWineDialog";
 import { WineFilters } from "@/components/WineFilters";
 import { SystembolagetLink } from "@/components/SystembolagetLink";
+import { LabelImage } from "@/components/LabelImage";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -155,13 +156,7 @@ const Archive = () => {
                     </div>
                     <div className="flex flex-col items-center shrink-0">
                       {wine.label_image_url ? (
-                        <img
-                          src={wine.label_image_url}
-                          alt={`${wine.name} label`}
-                          loading="lazy"
-                          className="w-16 h-20 object-cover rounded-md border border-border bg-muted"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                        />
+                        <LabelImage src={wine.label_image_url} alt={`${wine.name} label`} />
                       ) : (
                         <WineTypeIcon type={wine.type as WineType} />
                       )}

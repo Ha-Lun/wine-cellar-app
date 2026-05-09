@@ -4,6 +4,7 @@ import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed, Star, Spark
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SystembolagetLink } from "@/components/SystembolagetLink";
+import { LabelImage } from "@/components/LabelImage";
 
 const typeConfig: Record<WineType, { label: string; className: string; iconColor: string }> = {
   red: { label: "Red", className: "bg-wine-red text-primary-foreground", iconColor: "text-[#722F37]" },
@@ -71,13 +72,7 @@ export function WishlistCard({ wine, onDelete, onMoveToCellar, index }: Wishlist
         </div>
         <div className="flex flex-col items-center shrink-0">
           {wine.label_image_url ? (
-            <img
-              src={wine.label_image_url}
-              alt={`${wine.name} label`}
-              loading="lazy"
-              className="w-16 h-20 object-cover rounded-md border border-border bg-muted"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-            />
+            <LabelImage src={wine.label_image_url} alt={`${wine.name} label`} />
           ) : (
             <WineTypeIcon type={wine.type} />
           )}
