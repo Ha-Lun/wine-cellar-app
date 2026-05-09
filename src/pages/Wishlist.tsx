@@ -104,17 +104,19 @@ const Wishlist = () => {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" asChild title="Cellar">
+                <Link to="/"><Wine className="w-4 h-4" /></Link>
+              </Button>
+              <Button variant="ghost" size="icon" asChild title="Archive">
+                <Link to="/archive"><Archive className="w-4 h-4" /></Link>
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => signOut()}>
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
             <AddWishlistDialog onAdded={() => queryClient.invalidateQueries({ queryKey: ["wishlist"] })} />
-            <Button variant="ghost" size="icon" asChild title="Cellar">
-              <Link to="/"><Wine className="w-4 h-4" /></Link>
-            </Button>
-            <Button variant="ghost" size="icon" asChild title="Archive">
-              <Link to="/archive"><Archive className="w-4 h-4" /></Link>
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => signOut()}>
-              <LogOut className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </header>
