@@ -100,13 +100,7 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
         </div>
         <div className="flex flex-col items-center shrink-0">
           {wine.label_image_url ? (
-            <img
-              src={wine.label_image_url}
-              alt={`${wine.name} label`}
-              loading="lazy"
-              className="w-16 h-20 object-cover rounded-md border border-border bg-muted"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-            />
+            <LabelImage src={wine.label_image_url} alt={`${wine.name} label`} />
           ) : (
             <WineTypeIcon type={wine.type} />
           )}
