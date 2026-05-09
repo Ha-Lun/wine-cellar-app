@@ -15,6 +15,7 @@ import { WineRatingDialog } from "@/components/WineRatingDialog";
 import { EditWineDialog } from "@/components/EditWineDialog";
 import { WineFilters } from "@/components/WineFilters";
 import { SystembolagetLink } from "@/components/SystembolagetLink";
+import { LabelImage } from "@/components/LabelImage";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
