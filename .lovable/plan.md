@@ -1,43 +1,28 @@
-## Goal
-Show a Systembolaget link on each wine. If the wine is found there, link directly to the product page; otherwise show "Not available at Systembolaget" with a link to https://www.systembolaget.se/.
+## 1. Center wine label images & make them clickable
 
-## Approach
-Reuse the existing **Firecrawl** connector. On wine add/scan, search Systembolaget and store either the product URL or a "not available" marker. Cached forever (no auto re-check).
+Currently the label thumbnails use `object-cover`, which crops the image to fill the box. This often cuts off parts of the label and makes it look off-center.
 
-## Steps
+**Change in `WineCard.tsx`, `WishlistCard.tsx`, and `Archive.tsx`:**
+- Switch the thumbnail from `object-cover` to `object-contain` with `bg-muted` and centered alignment, so the entire label fits inside the box and is visually centered.
+- Wrap the `<img>` in a `<button>` that opens a `Dialog` showing the full-size image.
+- Dialog content: large centered image (max ~90vh), tap outside / close button to dismiss.
 
-### 1. Database migration
-Add two nullable columns to `wines`, `wishlist_wines`, and `drunk_wines`:
-- `systembolaget_url text` — direct product link if found
-- `systembolaget_checked_at timestamptz` — non-null means we've already looked it up (used to distinguish "not checked yet" from "checked, not available")
+A small reusable `LabelImage` component (e.g. `src/components/LabelImage.tsx`) will hold the thumbnail + dialog logic so all three card surfaces share the same behavior.
 
-### 2. New edge function: `check-systembolaget`
-- Input: `{ name, winery?, vintage? }`
-- Calls Firecrawl `search` with `site:systembolaget.se/produkt {winery} {name} {vintage}`, limit 3.
-- Filters results to URLs matching `https://www.systembolaget.se/produkt/...`.
-- Returns `{ url: string | null, reason?: "no_credits" | "rate_limited" }`.
-- JWT-protected, CORS, same 402/429 handling as the label-image function.
+## 2. Show/hide password on login screen
 
-### 3. Wire into add flows
-In `AddWineDialog` and `AddWishlistDialog`, after the existing `fetchLabelImage` background call, also call `checkSystembolaget` (in parallel). On success, update the row with `systembolaget_url` (may be null) and set `systembolaget_checked_at = now()`. Show the same credit-limit / rate-limit toast pattern.
+In `src/components/AuthForm.tsx`:
+- Add a small eye icon button (lucide `Eye` / `EyeOff`) inside the password input on both the Sign In and Sign Up tabs.
+- Toggle the input's `type` between `password` and `text` on click.
+- Use a single local state `showPassword` shared by both tabs.
+- Keep mobile-friendly tap target (≥36px) and 16px font for inputs (per project mobile rules).
 
-Add a helper in `src/lib/wines.ts`: `checkSystembolaget(params)`.
+## Files affected
 
-### 4. Display
-In `WineCard`, `WishlistCard`, and the Archive card, add a small link/badge under the rating row:
-- If `systembolaget_url` set → link "Buy on Systembolaget ↗" (opens in new tab).
-- Else if `systembolaget_checked_at` set → muted text "Not available · Systembolaget ↗" linking to https://www.systembolaget.se/.
-- Else (not checked yet — old wines) → nothing, OR a small "Check Systembolaget" button that triggers the lookup on demand. Out of scope unless requested.
+- `src/components/LabelImage.tsx` (new, shared thumbnail + lightbox)
+- `src/components/WineCard.tsx`
+- `src/components/WishlistCard.tsx`
+- `src/pages/Archive.tsx`
+- `src/components/AuthForm.tsx`
 
-Use a small Systembolaget-yellow accent (`#FFD500`) for the available state, muted-foreground for unavailable.
-
-## Technical notes
-- Systembolaget product URL pattern: `https://www.systembolaget.se/produkt/{category}/{slug}/{article-id}` — any result containing `/produkt/` is treated as a hit.
-- Search URL fallback: `https://www.systembolaget.se/sok/?q={encoded query}`.
-- Cache forever per the user's choice; users can clear by removing/re-adding the wine.
-
-## Out of scope
-- Backfill for existing wines
-- Price scraping
-- Stock-level / store-availability check
-- Periodic re-checks
+No backend, schema, or auth-logic changes.
