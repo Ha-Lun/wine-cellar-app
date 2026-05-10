@@ -25,6 +25,7 @@ export function AddWishlistDialog({ onAdded }: AddWishlistDialogProps) {
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [fetchingRating, setFetchingRating] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const initial = {
     name: "",
@@ -43,14 +44,18 @@ export function AddWishlistDialog({ onAdded }: AddWishlistDialogProps) {
   };
   const [form, setForm] = useState(initial);
 
-  const resetForm = () => setForm(initial);
+  const resetForm = () => {
+    setForm(initial);
+    setPreviewImage(null);
+  };
 
   const processImageBase64 = async (base64String: string) => {
+    const base64DataUrl = base64String.startsWith("data:")
+      ? base64String
+      : `data:image/jpeg;base64,${base64String}`;
+    setPreviewImage(base64DataUrl);
     setScanning(true);
     try {
-      const base64DataUrl = base64String.startsWith("data:")
-        ? base64String
-        : `data:image/jpeg;base64,${base64String}`;
       const result: WineScanResult = await scanWineLabel(base64DataUrl);
       setForm({
         ...initial,
@@ -203,7 +208,7 @@ export function AddWishlistDialog({ onAdded }: AddWishlistDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setPreviewImage(null); }}>
       <DialogTrigger asChild>
         <Button className="gap-2 w-full">
           <Plus className="w-4 h-4" />
@@ -228,14 +233,33 @@ export function AddWishlistDialog({ onAdded }: AddWishlistDialogProps) {
           </TabsList>
 
           <TabsContent value="scan" className="space-y-4 mt-4">
-            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-              {scanning ? (
-                <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground">Analyzing label with AI...</p>
+            <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
+              {previewImage ? (
+                <div className="space-y-3">
+                  <div className="relative mx-auto rounded-md overflow-hidden bg-muted flex items-center justify-center" style={{ maxHeight: 240 }}>
+                    <img src={previewImage} alt="Captured wine label" className="max-h-[240px] w-auto mx-auto object-contain" />
+                    {scanning && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                        <p className="text-sm font-medium">Analyzing label with AI...</p>
+                      </div>
+                    )}
+                  </div>
+                  {!scanning && (
+                    <div className="flex gap-2 justify-center">
+                      <Button variant="outline" size="sm" onClick={takePhoto}>
+                        <CameraIcon className="w-4 h-4 mr-2" />
+                        Retake Photo
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={uploadPhoto}>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Different
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-4">
+                <div className="flex flex-col items-center gap-4 py-4">
                   <div className="flex gap-4">
                     <CameraIcon className="w-10 h-10 text-muted-foreground" />
                     <Upload className="w-10 h-10 text-muted-foreground" />
