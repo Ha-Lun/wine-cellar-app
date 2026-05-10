@@ -48,16 +48,16 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
       type: "red", grape_variety: "", notes: "", drink_from: "",
       drink_until: "", food_pairings: "", quantity: "1", vivino_rating: null,
     });
+    setPreviewImage(null);
   };
 
   const processImageBase64 = async (base64String: string) => {
+    const base64DataUrl = base64String.startsWith('data:')
+      ? base64String
+      : `data:image/jpeg;base64,${base64String}`;
+    setPreviewImage(base64DataUrl);
     setScanning(true);
     try {
-      // Capacitor returns raw base64 string, we need to append the data URL prefix if it's missing
-      const base64DataUrl = base64String.startsWith('data:') 
-        ? base64String 
-        : `data:image/jpeg;base64,${base64String}`;
-
       const result: WineScanResult = await scanWineLabel(base64DataUrl);
       setForm({
         name: result.name || "",
