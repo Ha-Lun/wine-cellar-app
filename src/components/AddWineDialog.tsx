@@ -24,6 +24,7 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [fetchingRating, setFetchingRating] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "",
