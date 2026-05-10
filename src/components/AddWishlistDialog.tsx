@@ -25,6 +25,7 @@ export function AddWishlistDialog({ onAdded }: AddWishlistDialogProps) {
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [fetchingRating, setFetchingRating] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const initial = {
     name: "",
