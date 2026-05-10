@@ -136,7 +136,7 @@ const Index = () => {
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
-          <div />
+          
           <div className="justify-self-end">
             <AddWineDialog onAdded={() => queryClient.invalidateQueries({ queryKey: ["wines"] })} />
           </div>
