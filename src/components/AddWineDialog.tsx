@@ -218,7 +218,7 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setPreviewImage(null); }}>
       <DialogTrigger asChild>
         <Button className="gap-2 w-full">
           <Plus className="w-4 h-4" />
