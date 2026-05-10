@@ -44,14 +44,18 @@ export function AddWishlistDialog({ onAdded }: AddWishlistDialogProps) {
   };
   const [form, setForm] = useState(initial);
 
-  const resetForm = () => setForm(initial);
+  const resetForm = () => {
+    setForm(initial);
+    setPreviewImage(null);
+  };
 
   const processImageBase64 = async (base64String: string) => {
+    const base64DataUrl = base64String.startsWith("data:")
+      ? base64String
+      : `data:image/jpeg;base64,${base64String}`;
+    setPreviewImage(base64DataUrl);
     setScanning(true);
     try {
-      const base64DataUrl = base64String.startsWith("data:")
-        ? base64String
-        : `data:image/jpeg;base64,${base64String}`;
       const result: WineScanResult = await scanWineLabel(base64DataUrl);
       setForm({
         ...initial,
