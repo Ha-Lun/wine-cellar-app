@@ -107,8 +107,8 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-        <div className="container max-w-4xl mx-auto px-4 py-4 flex items-start justify-between">
-          <div className="flex items-start gap-3 flex-1 min-w-0 pr-2">
+        <div className="container max-w-4xl mx-auto px-4 py-4 grid grid-cols-[1fr_auto] gap-y-2 items-center">
+          <div className="flex items-center gap-3 flex-1 min-w-0 pr-2">
             <div className="w-9 h-9 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
               <Wine className="w-5 h-5 text-primary" />
             </div>
@@ -125,18 +125,19 @@ const Index = () => {
               </p>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" asChild title="Wishlist">
-                <Link to="/wishlist"><Heart className="w-4 h-4" /></Link>
-              </Button>
-              <Button variant="ghost" size="icon" asChild title="Wine Archive">
-                <Link to="/archive"><Archive className="w-4 h-4" /></Link>
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => signOut()}>
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" asChild title="Wishlist">
+              <Link to="/wishlist"><Heart className="w-4 h-4" /></Link>
+            </Button>
+            <Button variant="ghost" size="icon" asChild title="Wine Archive">
+              <Link to="/archive"><Archive className="w-4 h-4" /></Link>
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => signOut()}>
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
+          <div />
+          <div className="justify-self-end">
             <AddWineDialog onAdded={() => queryClient.invalidateQueries({ queryKey: ["wines"] })} />
           </div>
         </div>
