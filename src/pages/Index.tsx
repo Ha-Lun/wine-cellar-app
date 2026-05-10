@@ -108,7 +108,7 @@ const Index = () => {
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="container max-w-4xl mx-auto px-4 py-4 grid grid-cols-[1fr_auto] gap-y-2 items-center">
-          <div className="flex items-center gap-3 flex-1 min-w-0 pr-2">
+          <div className="row-span-2 flex items-center gap-3 min-w-0 pr-2">
             <div className="w-9 h-9 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
               <Wine className="w-5 h-5 text-primary" />
             </div>
@@ -125,7 +125,7 @@ const Index = () => {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 justify-self-end">
             <Button variant="ghost" size="icon" asChild title="Wishlist">
               <Link to="/wishlist"><Heart className="w-4 h-4" /></Link>
             </Button>
@@ -136,7 +136,7 @@ const Index = () => {
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
-          <div />
+          
           <div className="justify-self-end">
             <AddWineDialog onAdded={() => queryClient.invalidateQueries({ queryKey: ["wines"] })} />
           </div>
