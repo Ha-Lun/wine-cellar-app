@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Wine, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -51,14 +52,19 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Helmet>
+        <title>Reset Password — Wine Cellar</title>
+        <meta name="description" content="Set a new password for your Wine Cellar account." />
+        <link rel="canonical" href="https://sip-guardian.lovable.app/reset-password" />
+      </Helmet>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
             <Wine className="w-6 h-6 text-primary" />
           </div>
-          <CardTitle className="font-heading text-2xl">
+          <h1 className="font-heading text-2xl font-semibold leading-none tracking-tight">
             {hasRecoveryToken ? "Set New Password" : "Invalid Reset Link"}
-          </CardTitle>
+          </h1>
           <p className="text-sm text-muted-foreground">
             {hasRecoveryToken
               ? "Enter your new password below"
