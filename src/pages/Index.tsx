@@ -13,6 +13,7 @@ import { Wine, LogOut, Loader2, GlassWater, Archive, ChevronDown, ChevronRight, 
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 const typeFilters: { value: WineType | "all"; label: string }[] = [
   { value: "all", label: "All Wines" },
@@ -105,6 +106,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Wine Cellar — Your personal wine collection</title>
+        <meta name="description" content="Track your wine collection, scan labels, log tasting notes, and manage drinking windows in one place." />
+        <link rel="canonical" href="https://sip-guardian.lovable.app/" />
+        <meta property="og:title" content="Wine Cellar — Your personal wine collection" />
+        <meta property="og:url" content="https://sip-guardian.lovable.app/" />
+      </Helmet>
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="container max-w-4xl mx-auto px-4 py-4 grid grid-cols-[1fr_auto] gap-y-2 items-center">
@@ -126,13 +134,13 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 justify-self-end">
-            <Button variant="ghost" size="icon" asChild title="Wishlist">
-              <Link to="/wishlist"><Heart className="w-4 h-4" /></Link>
+            <Button variant="ghost" size="icon" asChild title="Wishlist" aria-label="Wishlist">
+              <Link to="/wishlist" aria-label="Wishlist"><Heart className="w-4 h-4" /></Link>
             </Button>
-            <Button variant="ghost" size="icon" asChild title="Wine Archive">
-              <Link to="/archive"><Archive className="w-4 h-4" /></Link>
+            <Button variant="ghost" size="icon" asChild title="Wine Archive" aria-label="Wine Archive">
+              <Link to="/archive" aria-label="Wine Archive"><Archive className="w-4 h-4" /></Link>
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => signOut()}>
+            <Button variant="ghost" size="icon" onClick={() => signOut()} aria-label="Log out">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>

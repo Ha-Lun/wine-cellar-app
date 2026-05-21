@@ -12,6 +12,7 @@ import { Heart, LogOut, Loader2, Wine, Archive, ChevronDown, ChevronRight } from
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 const typeFilters: { value: WineType | "all"; label: string }[] = [
   { value: "all", label: "All" },
@@ -88,6 +89,13 @@ const Wishlist = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Wishlist — Wine Cellar</title>
+        <meta name="description" content="Keep a wishlist of wines you'd like to buy and move them to your cellar in one tap." />
+        <link rel="canonical" href="https://sip-guardian.lovable.app/wishlist" />
+        <meta property="og:title" content="Wishlist — Wine Cellar" />
+        <meta property="og:url" content="https://sip-guardian.lovable.app/wishlist" />
+      </Helmet>
       <header
         className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
@@ -105,13 +113,13 @@ const Wishlist = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 justify-self-end">
-            <Button variant="ghost" size="icon" asChild title="Cellar">
-              <Link to="/"><Wine className="w-4 h-4" /></Link>
+            <Button variant="ghost" size="icon" asChild title="Cellar" aria-label="Cellar">
+              <Link to="/" aria-label="Cellar"><Wine className="w-4 h-4" /></Link>
             </Button>
-            <Button variant="ghost" size="icon" asChild title="Archive">
-              <Link to="/archive"><Archive className="w-4 h-4" /></Link>
+            <Button variant="ghost" size="icon" asChild title="Archive" aria-label="Archive">
+              <Link to="/archive" aria-label="Archive"><Archive className="w-4 h-4" /></Link>
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => signOut()}>
+            <Button variant="ghost" size="icon" onClick={() => signOut()} aria-label="Log out">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>

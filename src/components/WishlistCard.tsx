@@ -137,6 +137,7 @@ export function WishlistCard({ wine, onDelete, onMoveToCellar, index }: Wishlist
           className="h-8 w-8 text-muted-foreground hover:text-destructive"
           onClick={() => onDelete(wine.id)}
           title="Remove from wishlist"
+          aria-label="Remove from wishlist"
         >
           <Trash2 className="w-4 h-4" />
         </Button>
