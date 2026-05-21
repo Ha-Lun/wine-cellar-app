@@ -1,8 +1,0 @@
-{
-	"appId": "com.winecellar.sipguardian",
-	"appName": "wine-cellar",
-	"webDir": "dist",
-	"server": {
-		"linuxAndroidStudioPath": "/opt/android-studio/bin/studio.sh"
-	}
-}
