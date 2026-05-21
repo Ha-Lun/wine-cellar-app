@@ -180,6 +180,7 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
           className="h-8 w-8 text-muted-foreground hover:text-primary"
           onClick={() => setEditOpen(true)}
           title="Edit wine"
+          aria-label="Edit wine"
         >
           <Pencil className="w-4 h-4" />
         </Button>
@@ -189,6 +190,7 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
           className="h-8 w-8 text-muted-foreground hover:text-primary"
           onClick={() => { setDrunkAfterRate(false); setRatingOpen(true); }}
           title="Rate wine"
+          aria-label="Rate wine"
         >
           <Star className="w-4 h-4" />
         </Button>
@@ -198,6 +200,7 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
           className="h-8 w-8 text-muted-foreground hover:text-primary"
           onClick={handleMarkDrunk}
           title="Mark as drunk"
+          aria-label="Mark wine as drunk"
         >
           <GlassWater className="w-4 h-4" />
         </Button>
@@ -207,6 +210,7 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
           className="h-8 w-8 text-muted-foreground hover:text-destructive"
           onClick={() => onDelete(wine.id)}
           title="Delete"
+          aria-label="Delete wine"
         >
           <Trash2 className="w-4 h-4" />
         </Button>

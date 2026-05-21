@@ -1,0 +1,8 @@
+# Wine Cellar
+
+> Personal wine collection manager. Track bottles, scan labels, log tasting notes, manage drinking windows, and maintain a wishlist.
+
+## Pages
+
+- [Home](/): Sign in to manage your personal wine cellar.
+- [Privacy Policy](/privacy-policy): How we handle your data and cookies.

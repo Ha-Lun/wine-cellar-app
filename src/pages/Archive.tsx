@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Wine, Loader2, GlassWater, ArrowLeft, Star, Pencil, ArchiveRestore, Trash2, Sparkles, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { WineType } from "@/types/wine";
 import { format } from "date-fns";
@@ -88,11 +89,18 @@ const Archive = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Archive — Wine Cellar</title>
+        <meta name="description" content="Browse wines you've already enjoyed, with ratings and tasting notes." />
+        <link rel="canonical" href="https://sip-guardian.lovable.app/archive" />
+        <meta property="og:title" content="Archive — Wine Cellar" />
+        <meta property="og:url" content="https://sip-guardian.lovable.app/archive" />
+      </Helmet>
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="container max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/"><ArrowLeft className="w-5 h-5" /></Link>
+            <Button variant="ghost" size="icon" asChild aria-label="Back to cellar">
+              <Link to="/" aria-label="Back to cellar"><ArrowLeft className="w-5 h-5" /></Link>
             </Button>
             <div>
               <h1 className="font-heading text-xl font-bold leading-tight">Wine Archive</h1>
@@ -102,8 +110,8 @@ const Archive = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild title="Wishlist">
-              <Link to="/wishlist"><Heart className="w-4 h-4" /></Link>
+            <Button variant="ghost" size="icon" asChild title="Wishlist" aria-label="Wishlist">
+              <Link to="/wishlist" aria-label="Wishlist"><Heart className="w-4 h-4" /></Link>
             </Button>
             <WineFilters
               wines={drunkWines}
@@ -198,6 +206,7 @@ const Archive = () => {
                       className="h-8 w-8 text-muted-foreground hover:text-primary"
                       onClick={() => setEditWine(wine)}
                       title="Edit wine"
+                      aria-label="Edit wine"
                     >
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -207,6 +216,7 @@ const Archive = () => {
                       className="h-8 w-8 text-muted-foreground hover:text-primary"
                       onClick={() => setRatingWine(wine)}
                       title="Rate wine"
+                      aria-label="Rate wine"
                     >
                       <Star className="w-4 h-4" />
                     </Button>
@@ -216,6 +226,7 @@ const Archive = () => {
                       className="h-8 w-8 text-muted-foreground hover:text-primary"
                       onClick={() => restoreMutation.mutate(wine.id)}
                       title="Restore to cellar"
+                      aria-label="Restore wine to cellar"
                     >
                       <ArchiveRestore className="w-4 h-4" />
                     </Button>
@@ -225,6 +236,7 @@ const Archive = () => {
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
                       onClick={() => deleteMutation.mutate(wine.id)}
                       title="Delete"
+                      aria-label="Delete wine"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wine, Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -62,7 +62,7 @@ export function AuthForm() {
           <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
             <Wine className="w-6 h-6 text-primary" />
           </div>
-          <CardTitle className="font-heading text-2xl">Wine Cellar</CardTitle>
+          <h1 className="font-heading text-2xl font-semibold leading-none tracking-tight">Wine Cellar</h1>
           <p className="text-sm text-muted-foreground">Your personal wine collection</p>
         </CardHeader>
         <CardContent>
