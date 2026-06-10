@@ -167,6 +167,52 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
 
     setLoading(true);
     try {
+      if (destination === "wishlist") {
+        const wish: WishlistWineInsert = {
+          user_id: user.id,
+          name: form.name,
+          winery: form.winery || null,
+          region: form.region || null,
+          country: form.country || null,
+          vintage: form.vintage ? parseInt(form.vintage) : null,
+          type: form.type,
+          grape_variety: form.grape_variety || null,
+          notes: form.notes || null,
+          drink_from: form.drink_from ? parseInt(form.drink_from) : null,
+          drink_until: form.drink_until ? parseInt(form.drink_until) : null,
+          food_pairings: form.food_pairings ? form.food_pairings.split(",").map((s) => s.trim()).filter(Boolean) : null,
+          priority: form.priority,
+          vivino_rating: form.vivino_rating,
+        };
+        const inserted = await addWishlistWine(wish);
+        toast.success("Added to your wishlist!");
+        resetForm();
+        setOpen(false);
+        onAdded();
+        fetchLabelImage({ name: wish.name, winery: wish.winery, vintage: wish.vintage })
+          .then(async ({ image_url, reason }) => {
+            if (reason === "no_credits" || reason === "rate_limited") return;
+            if (image_url && inserted?.id) {
+              await updateWishlistWine(inserted.id, { label_image_url: image_url });
+              onAdded();
+            }
+          })
+          .catch(() => {});
+        checkSystembolaget({ name: wish.name, winery: wish.winery, vintage: wish.vintage })
+          .then(async ({ url, reason }) => {
+            if (reason === "no_credits" || reason === "rate_limited") return;
+            if (inserted?.id) {
+              await updateWishlistWine(inserted.id, {
+                systembolaget_url: url,
+                systembolaget_checked_at: new Date().toISOString(),
+              });
+              onAdded();
+            }
+          })
+          .catch(() => {});
+        return;
+      }
+
       const wine: WineInsert = {
         user_id: user.id,
         name: form.name,
@@ -188,7 +234,6 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
       resetForm();
       setOpen(false);
       onAdded();
-      // Background lookups: high-quality label image + Systembolaget link
       fetchLabelImage({ name: wine.name, winery: wine.winery, vintage: wine.vintage })
         .then(async ({ image_url, reason }) => {
           if (reason === "no_credits") {
@@ -237,10 +282,27 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-xl flex items-center gap-2">
-            <Wine className="w-5 h-5 text-primary" />
-            Add to Cellar
+            {destination === "wishlist" ? <Heart className="w-5 h-5 text-primary" /> : <Wine className="w-5 h-5 text-primary" />}
+            {destination === "wishlist" ? "Add to Wishlist" : "Add to Cellar"}
           </DialogTitle>
         </DialogHeader>
+
+        <div className="mt-3 grid grid-cols-2 gap-1 p-1 rounded-md bg-muted">
+          <button
+            type="button"
+            onClick={() => setDestination("cellar")}
+            className={`flex items-center justify-center gap-2 py-1.5 text-sm rounded transition-colors ${destination === "cellar" ? "bg-background shadow-sm font-medium" : "text-muted-foreground"}`}
+          >
+            <Wine className="w-4 h-4" /> Cellar
+          </button>
+          <button
+            type="button"
+            onClick={() => setDestination("wishlist")}
+            className={`flex items-center justify-center gap-2 py-1.5 text-sm rounded transition-colors ${destination === "wishlist" ? "bg-background shadow-sm font-medium" : "text-muted-foreground"}`}
+          >
+            <Heart className="w-4 h-4" /> Wishlist
+          </button>
+        </div>
 
         <Tabs defaultValue="manual" className="mt-2">
           <TabsList className="grid w-full grid-cols-2">
@@ -356,10 +418,24 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
               <Label htmlFor="pairings">Food Pairings (comma separated)</Label>
               <Input id="pairings" value={form.food_pairings} onChange={(e) => setForm({ ...form, food_pairings: e.target.value })} placeholder="Steak, Lamb, Aged cheese" />
             </div>
-            <div>
-              <Label htmlFor="quantity">Quantity</Label>
-              <Input id="quantity" type="number" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
-            </div>
+            {destination === "wishlist" ? (
+              <div className="col-span-2">
+                <Label htmlFor="priority">Priority</Label>
+                <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v as WishlistPriority })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low — someday</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High — buy soon</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div>
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input id="quantity" type="number" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
+              </div>
+            )}
             <div className="col-span-2 flex items-center justify-between p-3 border rounded-md bg-muted/50">
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-primary" />
