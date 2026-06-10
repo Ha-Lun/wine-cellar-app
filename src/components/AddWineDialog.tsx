@@ -27,6 +27,7 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [scanStage, setScanStage] = useState<"reading" | "enriching" | null>(null);
   const [fetchingRating, setFetchingRating] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [destination, setDestination] = useState<Destination>(defaultDestination);
