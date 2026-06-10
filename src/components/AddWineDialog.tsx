@@ -67,7 +67,8 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
     setScanning(true);
     try {
       const result: WineScanResult = await scanWineLabel(base64DataUrl);
-      setForm({
+      setForm((prev) => ({
+        ...prev,
         name: result.name || "",
         winery: result.winery || "",
         region: result.region || "",
@@ -81,7 +82,7 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
         food_pairings: result.food_pairings?.join(", ") || "",
         quantity: "1",
         vivino_rating: result.vivino_rating ?? null,
-      });
+      }));
       toast.success("Label scanned! Review the details and save.");
     } catch (err: any) {
       console.error(err);
