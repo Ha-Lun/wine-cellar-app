@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
-import { WineType, WineInsert, WineScanResult } from "@/types/wine";
+import { WineType, WineInsert, WineScanResult, WishlistWineInsert, WishlistPriority } from "@/types/wine";
 import { addWine, updateWine, scanWineLabel, getVivinoRating, fetchLabelImage, checkSystembolaget } from "@/lib/wines";
+import { addWishlistWine, updateWishlistWine } from "@/lib/wishlist";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,13 +10,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera as CameraIcon, Plus, Loader2, Wine, Search, Star, Upload } from "lucide-react";
+import { Camera as CameraIcon, Plus, Loader2, Wine, Search, Star, Upload, Heart } from "lucide-react";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
+type Destination = "cellar" | "wishlist";
+
 interface AddWineDialogProps {
   onAdded: () => void;
+  defaultDestination?: Destination;
 }
 
 export function AddWineDialog({ onAdded }: AddWineDialogProps) {
