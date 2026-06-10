@@ -463,7 +463,7 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
           </div>
           <Button onClick={handleSubmit} disabled={loading} className="w-full">
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            Add to Cellar
+            {destination === "wishlist" ? "Add to Wishlist" : "Add to Cellar"}
           </Button>
         </div>
       </DialogContent>
