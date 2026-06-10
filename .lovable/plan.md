@@ -1,30 +1,33 @@
 ## Goal
 
-When scanning a wine label (in both Add Wine and Add to Wishlist dialogs), show the captured/uploaded photo inside the "Take Photo / Upload" box so testers can clearly see that the image was received and is being analyzed.
+Let users decide where a wine goes (Cellar or Wishlist) when adding/scanning, and let them move existing entries either direction.
 
-## Behavior
+## Changes
 
-1. **Idle** (no image yet): show the current placeholder with the camera + upload icons and the two buttons. No change.
-2. **Image captured** (right after camera/upload returns, while AI is scanning):
-   - Replace the placeholder content with a preview of the actual captured image, centered and contained inside the box (max height ~240px).
-   - Overlay a semi-transparent layer with a spinner and the text "Analyzing label with AI..." so it's obvious the scan is in progress.
-3. **Scan finished successfully**: keep the image visible in the box (without the overlay) so the user sees which photo populated the form. Add a small "Retake / Upload again" button row underneath.
-4. **Scan failed**: keep the image visible with a small error message and the Retake / Upload again buttons, so the user can try a different photo.
-5. **Dialog closed or form reset**: clear the preview so the next open starts fresh.
+### 1. Destination selector in add dialogs
+Add a "Destination" toggle (Cellar / Wishlist) at the top of both add dialogs, above the Scan/Manual tabs. The selected destination drives which table the wine is saved to and which extra field shows up.
 
-## Technical details
+- **`src/components/AddWineDialog.tsx`** (entry point from Cellar page, default = Cellar):
+  - New `destination` state, default `"cellar"`.
+  - When `"wishlist"` is selected: hide Quantity, show Priority dropdown (Low / Medium / High); submit button label becomes "Add to Wishlist"; dialog title becomes "Add to Wishlist".
+  - `handleSubmit` branches: if `destination === "wishlist"`, call `addWishlistWine` + `updateWishlistWine` for background label/Systembolaget enrichment; otherwise current cellar path.
 
-Files to change:
-- `src/components/AddWineDialog.tsx`
-- `src/components/AddWishlistDialog.tsx`
+- **`src/components/AddWishlistDialog.tsx`** (entry point from Wishlist page, default = Wishlist):
+  - Mirror change: destination toggle (default `"wishlist"`), show Quantity when Cellar is picked, hide Priority. Submit/title labels switch accordingly.
+  - Branch to `addWine` when Cellar is chosen.
 
-Changes in each dialog:
-- Add `previewImage: string | null` state holding the data URL of the latest captured/uploaded photo.
-- In `processImageBase64`, set `previewImage` to the data URL before calling `scanWineLabel`, so the preview appears immediately when scanning starts.
-- Reset `previewImage` to `null` inside `resetForm()` and when the dialog `onOpenChange` closes.
-- Replace the contents of the dashed scan box with conditional rendering:
-  - If `previewImage` is null → current placeholder (icons + Take Photo / Upload buttons).
-  - If `previewImage` is set → render `<img src={previewImage}>` with `object-contain`, centered, max-height ~240px, rounded; if `scanning` is true, render an absolute-positioned overlay (`bg-background/70 backdrop-blur-sm`) with the spinner + "Analyzing label with AI..." text. Below the image, show a small row with "Retake Photo" and "Upload Different" buttons that call the existing `takePhoto` / `uploadPhoto` handlers.
-- Keep all existing scan logic, toasts, and form-population behavior unchanged.
+Scan flow stays identical — the scanned data populates the same shared form; only the save destination differs.
 
-No backend, schema, or business-logic changes. Purely a UI/UX clarity improvement that works the same on web and the Android Capacitor build (uses the existing `Camera.getPhoto` base64 result).
+### 2. Move existing cellar wine → wishlist
+- **`src/lib/wines.ts`**: new `moveCellarToWishlist(wineId)`. Reads the wine, inserts a row into `wishlist_wines` (mapping shared columns, default `priority = "medium"`), then deletes the cellar row (or decrements quantity if `quantity > 1`, matching the drunk-wines pattern).
+- **`src/components/WineCard.tsx`**: add a Heart icon button in the action row with `title="Move to wishlist"`, calling a new `onMoveToWishlist` prop.
+- **`src/pages/Index.tsx`**: implement the handler — call `moveCellarToWishlist`, toast, refresh.
+
+### 3. Wishlist → Cellar (already exists)
+`moveWishlistToCellar` and the "Got it" button on `WishlistCard` already cover this direction. No change needed.
+
+## Technical notes
+
+- No DB schema changes; both tables already have matching shared columns.
+- The destination toggle is a simple shadcn `Tabs` or segmented `ToggleGroup` rendered before the existing Scan/Manual tabs — keeps the scan UX (preview box, etc.) untouched.
+- Background enrichment (`fetchLabelImage`, `checkSystembolaget`) runs for both destinations using the matching update function.
