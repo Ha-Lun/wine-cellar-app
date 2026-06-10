@@ -157,6 +157,51 @@ export async function restoreToCellar(drunkWineId: string) {
   if (deleteError) throw deleteError;
 }
 
+export async function moveCellarToWishlist(wineId: string) {
+  const { data: wine, error: fetchError } = await supabase
+    .from("wines")
+    .select("*")
+    .eq("id", wineId)
+    .single();
+  if (fetchError) throw fetchError;
+
+  const { error: insertError } = await supabase.from("wishlist_wines").insert({
+    user_id: wine.user_id,
+    name: wine.name,
+    winery: wine.winery,
+    region: wine.region,
+    country: wine.country,
+    vintage: wine.vintage,
+    type: wine.type,
+    grape_variety: wine.grape_variety,
+    notes: wine.notes,
+    food_pairings: wine.food_pairings,
+    image_url: wine.image_url,
+    label_image_url: wine.label_image_url,
+    drink_from: wine.drink_from,
+    drink_until: wine.drink_until,
+    vivino_rating: wine.vivino_rating,
+    systembolaget_url: wine.systembolaget_url,
+    systembolaget_checked_at: wine.systembolaget_checked_at,
+    priority: "medium",
+  });
+  if (insertError) throw insertError;
+
+  if (wine.quantity > 1) {
+    const { error: updateError } = await supabase
+      .from("wines")
+      .update({ quantity: wine.quantity - 1 })
+      .eq("id", wineId);
+    if (updateError) throw updateError;
+  } else {
+    const { error: deleteError } = await supabase
+      .from("wines")
+      .delete()
+      .eq("id", wineId);
+    if (deleteError) throw deleteError;
+  }
+}
+
 export async function fetchDrunkWines() {
   const { data, error } = await supabase
     .from("drunk_wines")

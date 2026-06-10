@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchWines, deleteWine, markWineAsDrunk } from "@/lib/wines";
+import { fetchWines, deleteWine, markWineAsDrunk, moveCellarToWishlist } from "@/lib/wines";
 import { WineType } from "@/types/wine";
 import { WineCard } from "@/components/WineCard";
 import { AddWineDialog } from "@/components/AddWineDialog";
@@ -52,6 +52,16 @@ const Index = () => {
       toast.success("Wine moved to archive – cheers! 🍷");
     },
     onError: () => toast.error("Failed to archive wine"),
+  });
+
+  const moveToWishlistMutation = useMutation({
+    mutationFn: moveCellarToWishlist,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wines"] });
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+      toast.success("Moved to wishlist");
+    },
+    onError: () => toast.error("Failed to move to wishlist"),
   });
 
   const baseWines = customFiltered ?? wines;
@@ -146,7 +156,7 @@ const Index = () => {
           </div>
           
           <div className="justify-self-end">
-            <AddWineDialog onAdded={() => queryClient.invalidateQueries({ queryKey: ["wines"] })} />
+            <AddWineDialog onAdded={() => { queryClient.invalidateQueries({ queryKey: ["wines"] }); queryClient.invalidateQueries({ queryKey: ["wishlist"] }); }} />
           </div>
         </div>
       </header>
@@ -220,6 +230,7 @@ const Index = () => {
                           wine={wine}
                           onDelete={(id) => deleteMutation.mutate(id)}
                           onMarkDrunk={(id) => drunkMutation.mutate(id)}
+                          onMoveToWishlist={(id) => moveToWishlistMutation.mutate(id)}
                           onUpdated={() => queryClient.invalidateQueries({ queryKey: ["wines"] })}
                           index={i}
                         />

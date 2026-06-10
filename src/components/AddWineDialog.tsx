@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
-import { WineType, WineInsert, WineScanResult } from "@/types/wine";
+import { WineType, WineInsert, WineScanResult, WishlistWineInsert, WishlistPriority } from "@/types/wine";
 import { addWine, updateWine, scanWineLabel, getVivinoRating, fetchLabelImage, checkSystembolaget } from "@/lib/wines";
+import { addWishlistWine, updateWishlistWine } from "@/lib/wishlist";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,22 +10,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera as CameraIcon, Plus, Loader2, Wine, Search, Star, Upload } from "lucide-react";
+import { Camera as CameraIcon, Plus, Loader2, Wine, Search, Star, Upload, Heart } from "lucide-react";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
+type Destination = "cellar" | "wishlist";
+
 interface AddWineDialogProps {
   onAdded: () => void;
+  defaultDestination?: Destination;
 }
 
-export function AddWineDialog({ onAdded }: AddWineDialogProps) {
+export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWineDialogProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [fetchingRating, setFetchingRating] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [destination, setDestination] = useState<Destination>(defaultDestination);
 
   const [form, setForm] = useState({
     name: "",
@@ -39,6 +44,7 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
     drink_until: "",
     food_pairings: "",
     quantity: "1",
+    priority: "medium" as WishlistPriority,
     vivino_rating: null as number | null,
   });
 
@@ -46,9 +52,11 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
     setForm({
       name: "", winery: "", region: "", country: "", vintage: "",
       type: "red", grape_variety: "", notes: "", drink_from: "",
-      drink_until: "", food_pairings: "", quantity: "1", vivino_rating: null,
+      drink_until: "", food_pairings: "", quantity: "1",
+      priority: "medium", vivino_rating: null,
     });
     setPreviewImage(null);
+    setDestination(defaultDestination);
   };
 
   const processImageBase64 = async (base64String: string) => {
@@ -59,7 +67,8 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
     setScanning(true);
     try {
       const result: WineScanResult = await scanWineLabel(base64DataUrl);
-      setForm({
+      setForm((prev) => ({
+        ...prev,
         name: result.name || "",
         winery: result.winery || "",
         region: result.region || "",
@@ -73,7 +82,7 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
         food_pairings: result.food_pairings?.join(", ") || "",
         quantity: "1",
         vivino_rating: result.vivino_rating ?? null,
-      });
+      }));
       toast.success("Label scanned! Review the details and save.");
     } catch (err: any) {
       console.error(err);
@@ -158,6 +167,52 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
 
     setLoading(true);
     try {
+      if (destination === "wishlist") {
+        const wish: WishlistWineInsert = {
+          user_id: user.id,
+          name: form.name,
+          winery: form.winery || null,
+          region: form.region || null,
+          country: form.country || null,
+          vintage: form.vintage ? parseInt(form.vintage) : null,
+          type: form.type,
+          grape_variety: form.grape_variety || null,
+          notes: form.notes || null,
+          drink_from: form.drink_from ? parseInt(form.drink_from) : null,
+          drink_until: form.drink_until ? parseInt(form.drink_until) : null,
+          food_pairings: form.food_pairings ? form.food_pairings.split(",").map((s) => s.trim()).filter(Boolean) : null,
+          priority: form.priority,
+          vivino_rating: form.vivino_rating,
+        };
+        const inserted = await addWishlistWine(wish);
+        toast.success("Added to your wishlist!");
+        resetForm();
+        setOpen(false);
+        onAdded();
+        fetchLabelImage({ name: wish.name, winery: wish.winery, vintage: wish.vintage })
+          .then(async ({ image_url, reason }) => {
+            if (reason === "no_credits" || reason === "rate_limited") return;
+            if (image_url && inserted?.id) {
+              await updateWishlistWine(inserted.id, { label_image_url: image_url });
+              onAdded();
+            }
+          })
+          .catch(() => {});
+        checkSystembolaget({ name: wish.name, winery: wish.winery, vintage: wish.vintage })
+          .then(async ({ url, reason }) => {
+            if (reason === "no_credits" || reason === "rate_limited") return;
+            if (inserted?.id) {
+              await updateWishlistWine(inserted.id, {
+                systembolaget_url: url,
+                systembolaget_checked_at: new Date().toISOString(),
+              });
+              onAdded();
+            }
+          })
+          .catch(() => {});
+        return;
+      }
+
       const wine: WineInsert = {
         user_id: user.id,
         name: form.name,
@@ -179,7 +234,6 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
       resetForm();
       setOpen(false);
       onAdded();
-      // Background lookups: high-quality label image + Systembolaget link
       fetchLabelImage({ name: wine.name, winery: wine.winery, vintage: wine.vintage })
         .then(async ({ image_url, reason }) => {
           if (reason === "no_credits") {
@@ -228,10 +282,27 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-xl flex items-center gap-2">
-            <Wine className="w-5 h-5 text-primary" />
-            Add to Cellar
+            {destination === "wishlist" ? <Heart className="w-5 h-5 text-primary" /> : <Wine className="w-5 h-5 text-primary" />}
+            {destination === "wishlist" ? "Add to Wishlist" : "Add to Cellar"}
           </DialogTitle>
         </DialogHeader>
+
+        <div className="mt-3 grid grid-cols-2 gap-1 p-1 rounded-md bg-muted">
+          <button
+            type="button"
+            onClick={() => setDestination("cellar")}
+            className={`flex items-center justify-center gap-2 py-1.5 text-sm rounded transition-colors ${destination === "cellar" ? "bg-background shadow-sm font-medium" : "text-muted-foreground"}`}
+          >
+            <Wine className="w-4 h-4" /> Cellar
+          </button>
+          <button
+            type="button"
+            onClick={() => setDestination("wishlist")}
+            className={`flex items-center justify-center gap-2 py-1.5 text-sm rounded transition-colors ${destination === "wishlist" ? "bg-background shadow-sm font-medium" : "text-muted-foreground"}`}
+          >
+            <Heart className="w-4 h-4" /> Wishlist
+          </button>
+        </div>
 
         <Tabs defaultValue="manual" className="mt-2">
           <TabsList className="grid w-full grid-cols-2">
@@ -347,10 +418,24 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
               <Label htmlFor="pairings">Food Pairings (comma separated)</Label>
               <Input id="pairings" value={form.food_pairings} onChange={(e) => setForm({ ...form, food_pairings: e.target.value })} placeholder="Steak, Lamb, Aged cheese" />
             </div>
-            <div>
-              <Label htmlFor="quantity">Quantity</Label>
-              <Input id="quantity" type="number" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
-            </div>
+            {destination === "wishlist" ? (
+              <div className="col-span-2">
+                <Label htmlFor="priority">Priority</Label>
+                <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v as WishlistPriority })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low — someday</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High — buy soon</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div>
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input id="quantity" type="number" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
+              </div>
+            )}
             <div className="col-span-2 flex items-center justify-between p-3 border rounded-md bg-muted/50">
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-primary" />
@@ -378,7 +463,7 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
           </div>
           <Button onClick={handleSubmit} disabled={loading} className="w-full">
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            Add to Cellar
+            {destination === "wishlist" ? "Add to Wishlist" : "Add to Cellar"}
           </Button>
         </div>
       </DialogContent>

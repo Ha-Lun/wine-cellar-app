@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Wine, WineType } from "@/types/wine";
 import { motion } from "framer-motion";
-import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed, GlassWater, Star, Pencil, Sparkles } from "lucide-react";
+import { Wine as WineIcon, Grape, Trash2, Calendar, UtensilsCrossed, GlassWater, Star, Pencil, Sparkles, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { WineRatingDialog } from "@/components/WineRatingDialog";
@@ -35,11 +35,12 @@ interface WineCardProps {
   wine: Wine;
   onDelete: (id: string) => void;
   onMarkDrunk: (id: string) => void;
+  onMoveToWishlist: (id: string) => void;
   onUpdated: () => void;
   index: number;
 }
 
-export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: WineCardProps) {
+export function WineCard({ wine, onDelete, onMarkDrunk, onMoveToWishlist, onUpdated, index }: WineCardProps) {
   const [ratingOpen, setRatingOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [drunkAfterRate, setDrunkAfterRate] = useState(false);
@@ -193,6 +194,16 @@ export function WineCard({ wine, onDelete, onMarkDrunk, onUpdated, index }: Wine
           aria-label="Rate wine"
         >
           <Star className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-primary"
+          onClick={() => onMoveToWishlist(wine.id)}
+          title="Move to wishlist"
+          aria-label="Move wine to wishlist"
+        >
+          <Heart className="w-4 h-4" />
         </Button>
         <Button
           variant="ghost"
