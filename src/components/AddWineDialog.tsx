@@ -22,13 +22,14 @@ interface AddWineDialogProps {
   defaultDestination?: Destination;
 }
 
-export function AddWineDialog({ onAdded }: AddWineDialogProps) {
+export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWineDialogProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [fetchingRating, setFetchingRating] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [destination, setDestination] = useState<Destination>(defaultDestination);
 
   const [form, setForm] = useState({
     name: "",
@@ -43,6 +44,7 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
     drink_until: "",
     food_pairings: "",
     quantity: "1",
+    priority: "medium" as WishlistPriority,
     vivino_rating: null as number | null,
   });
 
@@ -50,9 +52,11 @@ export function AddWineDialog({ onAdded }: AddWineDialogProps) {
     setForm({
       name: "", winery: "", region: "", country: "", vintage: "",
       type: "red", grape_variety: "", notes: "", drink_from: "",
-      drink_until: "", food_pairings: "", quantity: "1", vivino_rating: null,
+      drink_until: "", food_pairings: "", quantity: "1",
+      priority: "medium", vivino_rating: null,
     });
     setPreviewImage(null);
+    setDestination(defaultDestination);
   };
 
   const processImageBase64 = async (base64String: string) => {
