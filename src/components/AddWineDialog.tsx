@@ -92,6 +92,7 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
       toast.error(`Failed to scan: ${err?.message || "Unknown error"}`);
     } finally {
       setScanning(false);
+      setScanStage(null);
     }
   };
 
