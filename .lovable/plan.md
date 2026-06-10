@@ -1,33 +1,47 @@
-## Goal
+# Improve Scan Label UX
 
-Let users decide where a wine goes (Cellar or Wishlist) when adding/scanning, and let them move existing entries either direction.
+Two visual additions to the Scan tab in `src/components/AddWineDialog.tsx`:
 
-## Changes
+## 1. Label framing guide (before capture)
 
-### 1. Destination selector in add dialogs
-Add a "Destination" toggle (Cellar / Wishlist) at the top of both add dialogs, above the Scan/Manual tabs. The selected destination drives which table the wine is saved to and which extra field shows up.
+When no photo has been taken yet, replace the current "Take Photo / Upload" placeholder with a clearer framing visual:
 
-- **`src/components/AddWineDialog.tsx`** (entry point from Cellar page, default = Cellar):
-  - New `destination` state, default `"cellar"`.
-  - When `"wishlist"` is selected: hide Quantity, show Priority dropdown (Low / Medium / High); submit button label becomes "Add to Wishlist"; dialog title becomes "Add to Wishlist".
-  - `handleSubmit` branches: if `destination === "wishlist"`, call `addWishlistWine` + `updateWishlistWine` for background label/Systembolaget enrichment; otherwise current cellar path.
+- A tall, rounded rectangle outline (roughly wine-label aspect ratio, e.g. ~3:4) centered in the dashed area.
+- Decorative corner brackets at the 4 corners of the outline (like a camera viewfinder) to suggest "fit your label here".
+- Centered helper text inside the frame: **"Fit the wine label inside this frame"** with a smaller subline **"Make sure the name and vintage are readable"**.
+- Keep the existing **Take Photo** and **Upload** buttons directly below the frame.
 
-- **`src/components/AddWishlistDialog.tsx`** (entry point from Wishlist page, default = Wishlist):
-  - Mirror change: destination toggle (default `"wishlist"`), show Quantity when Cellar is picked, hide Priority. Submit/title labels switch accordingly.
-  - Branch to `addWine` when Cellar is chosen.
+This is a static guide rendered in the dialog (not a live camera overlay — Capacitor's camera UI is native and can't be customized from here). It teaches the user how to frame the shot before they tap Take Photo.
 
-Scan flow stays identical — the scanned data populates the same shared form; only the save destination differs.
+## 2. Clearer loading state (during scan + enrichment)
 
-### 2. Move existing cellar wine → wishlist
-- **`src/lib/wines.ts`**: new `moveCellarToWishlist(wineId)`. Reads the wine, inserts a row into `wishlist_wines` (mapping shared columns, default `priority = "medium"`), then deletes the cellar row (or decrements quantity if `quantity > 1`, matching the drunk-wines pattern).
-- **`src/components/WineCard.tsx`**: add a Heart icon button in the action row with `title="Move to wishlist"`, calling a new `onMoveToWishlist` prop.
-- **`src/pages/Index.tsx`**: implement the handler — call `moveCellarToWishlist`, toast, refresh.
+Today, while `scanning` is true, a spinner overlays the preview with text "Analyzing label with AI…". Improve it:
 
-### 3. Wishlist → Cellar (already exists)
-`moveWishlistToCellar` and the "Got it" button on `WishlistCard` already cover this direction. No change needed.
+- Keep the overlay, but show a multi-step status:
+  1. "Reading the label…" (during `scanWineLabel`)
+  2. "Looking up wine details…" (shown briefly after OCR completes, while form is being populated)
+- Use a larger spinner + small animated dots, and disable the Retake/Upload buttons while loading (they're already hidden — keep that).
+- Apply the same overlay treatment if the user kicks off "Check Rating" from the scan flow? No — out of scope; only the scan/auto-fill phase.
+
+State change: add a small `scanStage` state (`"reading" | "enriching" | null`) controlled inside `processImageBase64` to swap the message. No new network calls.
 
 ## Technical notes
 
-- No DB schema changes; both tables already have matching shared columns.
-- The destination toggle is a simple shadcn `Tabs` or segmented `ToggleGroup` rendered before the existing Scan/Manual tabs — keeps the scan UX (preview box, etc.) untouched.
-- Background enrichment (`fetchLabelImage`, `checkSystembolaget`) runs for both destinations using the matching update function.
+- File touched: `src/components/AddWineDialog.tsx` only.
+- Frame guide is pure Tailwind/JSX (no new deps); corner brackets via 4 absolutely-positioned `div`s with 2-sided borders.
+- Loading overlay reuses the existing `Loader2` from lucide-react.
+- No changes to scan logic, edge functions, or data model.
+
+```text
+┌─ Scan tab ─────────────────────────┐
+│  ╭───────────────────────╮         │
+│  │ ┌                   ┐ │         │
+│  │                       │         │
+│  │   Fit the wine label  │         │
+│  │   inside this frame   │         │
+│  │                       │         │
+│  │ └                   ┘ │         │
+│  ╰───────────────────────╯         │
+│      [Take Photo] [Upload]         │
+└────────────────────────────────────┘
+```

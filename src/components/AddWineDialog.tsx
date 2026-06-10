@@ -27,6 +27,7 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [scanStage, setScanStage] = useState<"reading" | "enriching" | null>(null);
   const [fetchingRating, setFetchingRating] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [destination, setDestination] = useState<Destination>(defaultDestination);
@@ -65,8 +66,10 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
       : `data:image/jpeg;base64,${base64String}`;
     setPreviewImage(base64DataUrl);
     setScanning(true);
+    setScanStage("reading");
     try {
       const result: WineScanResult = await scanWineLabel(base64DataUrl);
+      setScanStage("enriching");
       setForm((prev) => ({
         ...prev,
         name: result.name || "",
@@ -89,6 +92,7 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
       toast.error(`Failed to scan: ${err?.message || "Unknown error"}`);
     } finally {
       setScanning(false);
+      setScanStage(null);
     }
   };
 
@@ -320,9 +324,17 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
                   <div className="relative mx-auto rounded-md overflow-hidden bg-muted flex items-center justify-center" style={{ maxHeight: 240 }}>
                     <img src={previewImage} alt="Captured wine label" className="max-h-[240px] w-auto mx-auto object-contain" />
                     {scanning && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                        <p className="text-sm font-medium">Analyzing label with AI...</p>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm">
+                        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                        <div className="text-center">
+                          <p className="text-sm font-medium">
+                            {scanStage === "enriching" ? "Looking up wine details" : "Reading the label"}
+                            <span className="inline-block animate-pulse">…</span>
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {scanStage === "enriching" ? "Matching vintage and region" : "Extracting text with AI"}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -340,15 +352,25 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
                   )}
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-4 py-4">
-                  <div className="flex gap-4">
-                    <CameraIcon className="w-10 h-10 text-muted-foreground" />
-                    <Upload className="w-10 h-10 text-muted-foreground" />
+                <div className="flex flex-col items-center gap-4 py-2">
+                  <div className="relative mx-auto" style={{ width: 180, height: 220 }}>
+                    <div className="absolute inset-0 rounded-md border-2 border-dashed border-primary/40 bg-primary/5" />
+                    {/* corner brackets */}
+                    <div className="absolute -top-0.5 -left-0.5 w-5 h-5 border-t-2 border-l-2 border-primary rounded-tl-md" />
+                    <div className="absolute -top-0.5 -right-0.5 w-5 h-5 border-t-2 border-r-2 border-primary rounded-tr-md" />
+                    <div className="absolute -bottom-0.5 -left-0.5 w-5 h-5 border-b-2 border-l-2 border-primary rounded-bl-md" />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 border-b-2 border-r-2 border-primary rounded-br-md" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-3">
+                      <Wine className="w-7 h-7 text-primary/70 mb-2" />
+                      <p className="text-sm font-medium text-foreground">
+                        Fit the wine label inside this frame
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Make sure the name and vintage are readable
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Take a live photo or upload an existing image
-                  </p>
-                  <div className="flex gap-3 mt-2">
+                  <div className="flex gap-3 mt-1">
                     <Button variant="default" onClick={takePhoto}>
                       <CameraIcon className="w-4 h-4 mr-2" />
                       Take Photo
