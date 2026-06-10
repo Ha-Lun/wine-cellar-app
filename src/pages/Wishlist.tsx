@@ -124,7 +124,7 @@ const Wishlist = () => {
             </Button>
           </div>
           <div className="justify-self-end">
-            <AddWishlistDialog onAdded={() => queryClient.invalidateQueries({ queryKey: ["wishlist"] })} />
+            <AddWishlistDialog onAdded={() => { queryClient.invalidateQueries({ queryKey: ["wishlist"] }); queryClient.invalidateQueries({ queryKey: ["wines"] }); }} />
           </div>
         </div>
       </header>

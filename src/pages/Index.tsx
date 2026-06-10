@@ -156,7 +156,7 @@ const Index = () => {
           </div>
           
           <div className="justify-self-end">
-            <AddWineDialog onAdded={() => queryClient.invalidateQueries({ queryKey: ["wines"] })} />
+            <AddWineDialog onAdded={() => { queryClient.invalidateQueries({ queryKey: ["wines"] }); queryClient.invalidateQueries({ queryKey: ["wishlist"] }); }} />
           </div>
         </div>
       </header>
