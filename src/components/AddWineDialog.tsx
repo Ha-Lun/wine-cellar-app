@@ -66,8 +66,10 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
       : `data:image/jpeg;base64,${base64String}`;
     setPreviewImage(base64DataUrl);
     setScanning(true);
+    setScanStage("reading");
     try {
       const result: WineScanResult = await scanWineLabel(base64DataUrl);
+      setScanStage("enriching");
       setForm((prev) => ({
         ...prev,
         name: result.name || "",
