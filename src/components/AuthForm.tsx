@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -157,6 +158,14 @@ export function AuthForm() {
             </Tabs>
           )}
         </CardContent>
+        <div className="px-6 pb-6 -mt-2 text-center">
+          <Link
+            to="/privacy-policy"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Privacy Policy
+          </Link>
+        </div>
       </Card>
     </div>
   );
