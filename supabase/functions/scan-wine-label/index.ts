@@ -5,62 +5,39 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-async function callAI(apiKey: string, messages: any[], useTools = false) {
-  const body: any = {
-    model: "google/gemini-2.5-flash",
-    messages,
-  };
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const MODEL = "llama-3.2-90b-vision-preview";
 
-  if (useTools) {
-    body.tools = [
-      {
-        type: "function",
-        function: {
-          name: "wine_data",
-          description: "Return verified wine information",
-          parameters: {
-            type: "object",
-            properties: {
-              name: { type: "string", description: "Full wine name" },
-              winery: { type: "string", description: "Producer/winery name" },
-              region: { type: "string", description: "Wine region (e.g. Bordeaux, Napa Valley)" },
-              country: { type: "string", description: "Country of origin" },
-              vintage: { type: "number", description: "Vintage year" },
-              type: { type: "string", enum: ["red", "white", "champagne", "sparkling"], description: "Wine type" },
-              grape_variety: { type: "string", description: "Primary grape variety or blend" },
-              drink_from: { type: "number", description: "Year from which this wine is optimal to drink" },
-              drink_until: { type: "number", description: "Year until which this wine should be consumed" },
-              food_pairings: { type: "array", items: { type: "string" }, description: "3-5 food pairing suggestions" },
-            },
-            required: ["name", "type"],
-            additionalProperties: false,
-          },
-        },
-      },
-    ];
-    body.tool_choice = { type: "function", function: { name: "wine_data" } };
-  }
+const SYSTEM_PROMPT = `You are a world-class wine expert and sommelier with encyclopedic knowledge of wines worldwide.
+Analyze the provided wine label image and return ONLY a JSON object (no prose, no markdown fences) matching this schema:
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const status = response.status;
-    if (status === 429) throw { status: 429, message: "Rate limit exceeded, please try again later." };
-    if (status === 402) throw { status: 402, message: "AI credits exhausted. Please add funds." };
-    const errText = await response.text();
-    console.error("Lovable AI error:", status, errText);
-    throw { status: 500, message: "AI request failed" };
-  }
-
-  return await response.json();
+{
+  "name": string,                      // Full wine name (required)
+  "winery": string,                    // Producer/winery name
+  "region": string,                    // e.g. Bordeaux, Napa Valley
+  "country": string,                   // Country of origin
+  "vintage": number,                   // Vintage year
+  "type": "red" | "white" | "champagne" | "sparkling",  // required
+  "grape_variety": string,             // Primary grape or blend
+  "drink_from": number,                // Optimal start year
+  "drink_until": number,               // Optimal end year
+  "food_pairings": string[]            // 3-5 pairing suggestions
 }
+
+Instructions:
+1. EXTRACT all visible info from the label.
+2. VERIFY and correct obvious misreadings (winery, region spellings).
+3. FILL IN missing fields from your wine knowledge if you recognize the wine.
+4. ESTIMATE the drinking window based on type, region, vintage, producer:
+   - Young simple whites: vintage + 1-3y
+   - Quality whites (Burgundy, Riesling GC): vintage + 3-10y
+   - Champagne NV: 1-3y from now; vintage: 5-15y
+   - Light reds (Pinot, Beaujolais): vintage + 2-5y
+   - Medium reds (Merlot, Chianti): vintage + 3-8y
+   - Full-bodied reds (Cabernet, Barolo, Bordeaux GC): vintage + 5-25y
+5. SUGGEST 3-5 accurate food pairings.
+
+Return ONLY the JSON object. No commentary.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -68,7 +45,6 @@ serve(async (req) => {
   }
 
   try {
-    // Validate JWT authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -101,84 +77,72 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
+    if (!GROQ_API_KEY) {
+      throw new Error("GROQ_API_KEY is not configured");
     }
 
-    // ── Step 1 & 2 Combined: Extract, verify, and enrich from the image directly ──
-    console.log("Analyzing wine label and enriching data...");
-    
-    const analysisResponse = await callAI(
-      LOVABLE_API_KEY,
-      [
-        {
-          role: "system",
-          content: `You are a world-class wine expert and sommelier with encyclopedic knowledge of wines worldwide.
-Your job is to analyze the provided wine label image and return a structured JSON response with verified data.
+    console.log("Analyzing wine label via Groq...");
 
-Instructions:
-1. EXTRACT ALL visible information from the wine label image.
-2. VERIFY the data — correct any obvious errors or misreadings (e.g. wrong region, misspelled winery).
-3. FILL IN missing fields using your wine knowledge (region, country, grape variety, type) if you recognize the wine.
-4. ESTIMATE the optimal drinking window (drink_from, drink_until) based on the wine's type, region, vintage, and producer quality.
-5. SUGGEST 3-5 accurate food pairings based on the specific wine style.
+    const aiRes = await fetch(GROQ_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: SYSTEM_PROMPT + "\n\nAnalyze this wine label." },
+              { type: "image_url", image_url: { url: image } },
+            ],
+          },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    });
 
-Drinking window guidelines:
-- Young simple whites: vintage + 1-3 years
-- Quality whites (Burgundy, Riesling Grand Cru): vintage + 3-10 years
-- Champagne NV: 1-3 years from now, vintage: 5-15 years
-- Light reds (Pinot Noir, Beaujolais): vintage + 2-5 years
-- Medium reds (Merlot, Chianti): vintage + 3-8 years
-- Full-bodied reds (Cabernet, Barolo, Bordeaux Grand Cru): vintage + 5-25 years`
-        },
-        {
-          role: "user",
-          content: [
-            { type: "image_url", image_url: { url: image } },
-            { type: "text", text: "Please analyze this wine label and return the structured data." }
-          ]
-        }
-      ],
-      true // use tool calling for structured output
-    );
+    if (aiRes.status === 429) {
+      return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!aiRes.ok) {
+      const errText = await aiRes.text();
+      console.error("Groq error:", aiRes.status, errText);
+      return new Response(JSON.stringify({ error: "AI request failed", detail: errText }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    // Extract structured data from tool call
-    const toolCall = analysisResponse.choices?.[0]?.message?.tool_calls?.[0];
-    
+    const data = await aiRes.json();
+    const raw = data?.choices?.[0]?.message?.content;
+    if (!raw) throw new Error("No response from AI");
+
     let wineData;
-    if (toolCall?.function?.arguments) {
-      wineData = JSON.parse(toolCall.function.arguments);
-      console.log("Structured result extracted from tool call:", JSON.stringify(wineData));
-    } else {
-      // Fallback in case the model ignored the tool and just returned JSON text
-      let rawContent = analysisResponse.choices?.[0]?.message?.content;
-      if (!rawContent) {
-        throw new Error("No response from AI");
-      }
-      
-      let cleaned = rawContent.trim();
-      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        cleaned = jsonMatch[0];
-      }
-      wineData = JSON.parse(cleaned);
-      console.log("Structured result extracted from text fallback:", JSON.stringify(wineData));
+    try {
+      wineData = JSON.parse(raw);
+    } catch {
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error("AI returned non-JSON content");
+      wineData = JSON.parse(match[0]);
     }
+
+    console.log("Extracted wine data:", JSON.stringify(wineData));
 
     return new Response(JSON.stringify(wineData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
     console.error("scan-wine-label error:", e);
-    const status = e?.status || 500;
-    const message = e?.message || (e instanceof Error ? e.message : "Unknown error");
     return new Response(
-      JSON.stringify({ error: message }),
-      {
-        status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ error: e?.message || "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
