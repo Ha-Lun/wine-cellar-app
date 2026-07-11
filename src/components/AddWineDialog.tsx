@@ -205,7 +205,6 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
         drink_until: form.drink_until ? parseInt(form.drink_until) : null,
         food_pairings: form.food_pairings ? form.food_pairings.split(",").map((s) => s.trim()).filter(Boolean) : null,
         quantity: parseInt(form.quantity) || 1,
-        vivino_rating: form.vivino_rating,
       };
       const inserted = await addWine(wine);
       toast.success("Wine added to your cellar!");
