@@ -99,14 +99,6 @@ export function WishlistCard({ wine, onDelete, onMoveToCellar, index }: Wishlist
         </div>
       )}
 
-      {wine.vivino_rating && (
-        <div className="mt-2">
-          <Badge variant="outline" className="text-xs bg-[#AA1E3A]/10 text-[#AA1E3A] border-[#AA1E3A]/20 font-medium">
-            <Star className="w-3 h-3 fill-current mr-1" />
-            Vivino {wine.vivino_rating}
-          </Badge>
-        </div>
-      )}
 
       {wine.notes && (
         <p className="mt-2 text-sm text-muted-foreground italic line-clamp-2">"{wine.notes}"</p>

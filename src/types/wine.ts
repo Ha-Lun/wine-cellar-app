@@ -19,5 +19,5 @@ export interface WineScanResult {
   drink_from?: number;
   drink_until?: number;
   food_pairings?: string[];
-  vivino_rating?: number;
+  
 }

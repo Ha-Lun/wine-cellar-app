@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
-import { Filter, X, ChevronDown, ChevronRight, Star } from "lucide-react";
+import { Filter, X, ChevronDown, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface WineFiltersProps {
@@ -17,10 +16,9 @@ type FilterState = {
   grapes: string[];
   years: number[];
   foods: string[];
-  minVivinoRating: number;
 };
 
-const emptyFilters: FilterState = { countries: [], regions: [], grapes: [], years: [], foods: [], minVivinoRating: 0 };
+const emptyFilters: FilterState = { countries: [], regions: [], grapes: [], years: [], foods: [] };
 
 export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
@@ -46,7 +44,7 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
   Object.keys(regionsByCountry).forEach((c) => regionsByCountry[c].sort());
 
   const activeCount =
-    filters.countries.length + filters.regions.length + filters.grapes.length + filters.years.length + filters.foods.length + (filters.minVivinoRating > 0 ? 1 : 0);
+    filters.countries.length + filters.regions.length + filters.grapes.length + filters.years.length + filters.foods.length;
 
   const apply = (next: FilterState) => {
     setFilters(next);
@@ -63,15 +61,9 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
       result = result.filter((w) =>
         w.food_pairings?.some((f: string) => next.foods.includes(f))
       );
-    if (next.minVivinoRating > 0)
-      result = result.filter((w) => (w.vivino_rating || 0) >= next.minVivinoRating);
     onFilteredWines(result);
   };
 
-  const setMinRating = (val: number) => {
-    const next = { ...filters, minVivinoRating: val };
-    apply(next);
-  };
 
   const toggle = (key: keyof FilterState, value: string | number) => {
     const arr = filters[key] as any[];
@@ -152,23 +144,6 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
         </div>
         <ScrollArea className="max-h-80">
           <div className="p-4 space-y-4">
-            {/* Vivino Rating Filter */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                  <Star className="w-3 h-3 text-[#AA1E3A]" />
-                  Vivino Rating
-                </p>
-                <span className="text-xs font-bold text-primary">{filters.minVivinoRating > 0 ? `${filters.minVivinoRating.toFixed(1)}+` : "Any"}</span>
-              </div>
-              <Slider
-                max={5}
-                step={0.1}
-                value={[filters.minVivinoRating]}
-                onValueChange={(vals) => setMinRating(vals[0])}
-                className="my-3 px-1"
-              />
-            </div>
 
             {/* Country with nested regions */}
             {countries.length > 0 && (

@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { WineType, WineInsert, WineScanResult, WishlistWineInsert, WishlistPriority } from "@/types/wine";
-import { addWine, updateWine, scanWineLabel, getVivinoRating, fetchLabelImage, checkSystembolaget } from "@/lib/wines";
+import { addWine, updateWine, scanWineLabel, fetchLabelImage, checkSystembolaget } from "@/lib/wines";
 import { addWishlistWine, updateWishlistWine } from "@/lib/wishlist";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera as CameraIcon, Plus, Loader2, Wine, Search, Star, Upload, Heart } from "lucide-react";
+import { Camera as CameraIcon, Plus, Loader2, Wine, Upload, Heart } from "lucide-react";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,7 +28,6 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanStage, setScanStage] = useState<"reading" | "enriching" | null>(null);
-  const [fetchingRating, setFetchingRating] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [destination, setDestination] = useState<Destination>(defaultDestination);
 
@@ -46,7 +45,6 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
     food_pairings: "",
     quantity: "1",
     priority: "medium" as WishlistPriority,
-    vivino_rating: null as number | null,
   });
 
   const resetForm = () => {
@@ -54,7 +52,7 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
       name: "", winery: "", region: "", country: "", vintage: "",
       type: "red", grape_variety: "", notes: "", drink_from: "",
       drink_until: "", food_pairings: "", quantity: "1",
-      priority: "medium", vivino_rating: null,
+      priority: "medium",
     });
     setPreviewImage(null);
     setDestination(defaultDestination);
@@ -84,7 +82,6 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
         drink_until: result.drink_until?.toString() || "",
         food_pairings: result.food_pairings?.join(", ") || "",
         quantity: "1",
-        vivino_rating: result.vivino_rating ?? null,
       }));
       toast.success("Label scanned! Review the details and save.");
     } catch (err: any) {
@@ -136,28 +133,6 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
     }
   };
 
-  const handleFetchRating = async () => {
-    if (!form.name) {
-      toast.error("Please enter a wine name first");
-      return;
-    }
-    const query = `${form.name} ${form.vintage || ""}`.trim();
-    setFetchingRating(true);
-    try {
-      const rating = await getVivinoRating(query);
-      if (rating) {
-        setForm({ ...form, vivino_rating: rating });
-        toast.success(`Found Vivino rating: ${rating}`);
-      } else {
-        toast.error("Could not find a Vivino rating for this wine");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch Vivino rating");
-    } finally {
-      setFetchingRating(false);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
@@ -186,7 +161,6 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
           drink_until: form.drink_until ? parseInt(form.drink_until) : null,
           food_pairings: form.food_pairings ? form.food_pairings.split(",").map((s) => s.trim()).filter(Boolean) : null,
           priority: form.priority,
-          vivino_rating: form.vivino_rating,
         };
         const inserted = await addWishlistWine(wish);
         toast.success("Added to your wishlist!");
@@ -231,7 +205,6 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
         drink_until: form.drink_until ? parseInt(form.drink_until) : null,
         food_pairings: form.food_pairings ? form.food_pairings.split(",").map((s) => s.trim()).filter(Boolean) : null,
         quantity: parseInt(form.quantity) || 1,
-        vivino_rating: form.vivino_rating,
       };
       const inserted = await addWine(wine);
       toast.success("Wine added to your cellar!");
@@ -458,26 +431,6 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
                 <Input id="quantity" type="number" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
               </div>
             )}
-            <div className="col-span-2 flex items-center justify-between p-3 border rounded-md bg-muted/50">
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">Vivino Rating</span>
-                {form.vivino_rating ? (
-                  <Badge variant="secondary" className="ml-2 font-bold">{form.vivino_rating}</Badge>
-                ) : (
-                  <span className="text-sm text-muted-foreground ml-2">Not checked</span>
-                )}
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleFetchRating}
-                disabled={fetchingRating || !form.name}
-              >
-                {fetchingRating ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Search className="w-3 h-3 mr-2" />}
-                Check Rating
-              </Button>
-            </div>
           </div>
           <div>
             <Label htmlFor="notes">Notes</Label>
