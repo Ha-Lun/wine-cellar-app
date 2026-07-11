@@ -161,7 +161,6 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
           drink_until: form.drink_until ? parseInt(form.drink_until) : null,
           food_pairings: form.food_pairings ? form.food_pairings.split(",").map((s) => s.trim()).filter(Boolean) : null,
           priority: form.priority,
-          vivino_rating: form.vivino_rating,
         };
         const inserted = await addWishlistWine(wish);
         toast.success("Added to your wishlist!");
