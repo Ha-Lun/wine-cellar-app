@@ -144,23 +144,6 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
         </div>
         <ScrollArea className="max-h-80">
           <div className="p-4 space-y-4">
-            {/* Vivino Rating Filter */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                  <Star className="w-3 h-3 text-[#AA1E3A]" />
-                  Vivino Rating
-                </p>
-                <span className="text-xs font-bold text-primary">{filters.minVivinoRating > 0 ? `${filters.minVivinoRating.toFixed(1)}+` : "Any"}</span>
-              </div>
-              <Slider
-                max={5}
-                step={0.1}
-                value={[filters.minVivinoRating]}
-                onValueChange={(vals) => setMinRating(vals[0])}
-                className="my-3 px-1"
-              />
-            </div>
 
             {/* Country with nested regions */}
             {countries.length > 0 && (
