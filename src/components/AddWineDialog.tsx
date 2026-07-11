@@ -52,7 +52,7 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
       name: "", winery: "", region: "", country: "", vintage: "",
       type: "red", grape_variety: "", notes: "", drink_from: "",
       drink_until: "", food_pairings: "", quantity: "1",
-      priority: "medium", vivino_rating: null,
+      priority: "medium",
     });
     setPreviewImage(null);
     setDestination(defaultDestination);
