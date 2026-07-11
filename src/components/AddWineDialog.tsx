@@ -133,28 +133,6 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
     }
   };
 
-  const handleFetchRating = async () => {
-    if (!form.name) {
-      toast.error("Please enter a wine name first");
-      return;
-    }
-    const query = `${form.name} ${form.vintage || ""}`.trim();
-    setFetchingRating(true);
-    try {
-      const rating = await getVivinoRating(query);
-      if (rating) {
-        setForm({ ...form, vivino_rating: rating });
-        toast.success(`Found Vivino rating: ${rating}`);
-      } else {
-        toast.error("Could not find a Vivino rating for this wine");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch Vivino rating");
-    } finally {
-      setFetchingRating(false);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
