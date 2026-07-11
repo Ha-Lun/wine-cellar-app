@@ -431,26 +431,6 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
                 <Input id="quantity" type="number" min="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
               </div>
             )}
-            <div className="col-span-2 flex items-center justify-between p-3 border rounded-md bg-muted/50">
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">Vivino Rating</span>
-                {form.vivino_rating ? (
-                  <Badge variant="secondary" className="ml-2 font-bold">{form.vivino_rating}</Badge>
-                ) : (
-                  <span className="text-sm text-muted-foreground ml-2">Not checked</span>
-                )}
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleFetchRating}
-                disabled={fetchingRating || !form.name}
-              >
-                {fetchingRating ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Search className="w-3 h-3 mr-2" />}
-                Check Rating
-              </Button>
-            </div>
           </div>
           <div>
             <Label htmlFor="notes">Notes</Label>
