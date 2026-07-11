@@ -219,13 +219,6 @@ export async function scanWineLabel(imageBase64: string) {
   return data;
 }
 
-export async function getVivinoRating(query: string) {
-  const { data, error } = await supabase.functions.invoke("get-vivino-rating", {
-    body: { query },
-  });
-  if (error) throw error;
-  return data.rating as number | null;
-}
 
 export async function fetchLabelImage(params: { name: string; winery?: string | null; vintage?: number | null }) {
   const { data, error } = await supabase.functions.invoke("fetch-label-image", { body: params });
