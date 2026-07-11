@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
 import { Filter, X, ChevronDown, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -17,10 +16,9 @@ type FilterState = {
   grapes: string[];
   years: number[];
   foods: string[];
-  minVivinoRating: number;
 };
 
-const emptyFilters: FilterState = { countries: [], regions: [], grapes: [], years: [], foods: [], minVivinoRating: 0 };
+const emptyFilters: FilterState = { countries: [], regions: [], grapes: [], years: [], foods: [] };
 
 export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
@@ -46,7 +44,7 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
   Object.keys(regionsByCountry).forEach((c) => regionsByCountry[c].sort());
 
   const activeCount =
-    filters.countries.length + filters.regions.length + filters.grapes.length + filters.years.length + filters.foods.length + (filters.minVivinoRating > 0 ? 1 : 0);
+    filters.countries.length + filters.regions.length + filters.grapes.length + filters.years.length + filters.foods.length;
 
   const apply = (next: FilterState) => {
     setFilters(next);
@@ -63,15 +61,9 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
       result = result.filter((w) =>
         w.food_pairings?.some((f: string) => next.foods.includes(f))
       );
-    if (next.minVivinoRating > 0)
-      result = result.filter((w) => (w.vivino_rating || 0) >= next.minVivinoRating);
     onFilteredWines(result);
   };
 
-  const setMinRating = (val: number) => {
-    const next = { ...filters, minVivinoRating: val };
-    apply(next);
-  };
 
   const toggle = (key: keyof FilterState, value: string | number) => {
     const arr = filters[key] as any[];
