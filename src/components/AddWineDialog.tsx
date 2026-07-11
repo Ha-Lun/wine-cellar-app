@@ -82,7 +82,6 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
         drink_until: result.drink_until?.toString() || "",
         food_pairings: result.food_pairings?.join(", ") || "",
         quantity: "1",
-        vivino_rating: result.vivino_rating ?? null,
       }));
       toast.success("Label scanned! Review the details and save.");
     } catch (err: any) {
