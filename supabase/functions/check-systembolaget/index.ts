@@ -12,7 +12,14 @@ const json = (status: number, body: unknown) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-function pickProductUrl(results: any[]): string | null {
+interface SearchResult {
+  url?: string;
+  metadata?: {
+    sourceURL?: string;
+  };
+}
+
+function pickProductUrl(results: SearchResult[]): string | null {
   for (const r of results) {
     const url: string = r?.url ?? r?.metadata?.sourceURL ?? "";
     if (url && /https?:\/\/(www\.)?systembolaget\.se\/produkt\//i.test(url)) {

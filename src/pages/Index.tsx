@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchWines, deleteWine, markWineAsDrunk, moveCellarToWishlist } from "@/lib/wines";
-import { WineType } from "@/types/wine";
+import { WineType, Wine } from "@/types/wine";
 import { WineCard } from "@/components/WineCard";
 import { AddWineDialog } from "@/components/AddWineDialog";
 import { WineFilters } from "@/components/WineFilters";
@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { AuthForm } from "@/components/AuthForm";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wine, LogOut, Loader2, GlassWater, Archive, ChevronDown, ChevronRight, Heart } from "lucide-react";
+import { Wine as WineIcon, LogOut, Loader2, GlassWater, Archive, ChevronDown, ChevronRight, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -26,7 +26,7 @@ const typeFilters: { value: WineType | "all"; label: string }[] = [
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const [filter, setFilter] = useState<WineType | "all">("all");
-  const [customFiltered, setCustomFiltered] = useState<any[] | null>(null);
+  const [customFiltered, setCustomFiltered] = useState<Wine[] | null>(null);
   const [collapsedCountries, setCollapsedCountries] = useState<string[]>([]);
   const queryClient = useQueryClient();
 
@@ -127,8 +127,8 @@ const Index = () => {
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="container max-w-4xl mx-auto px-4 py-4 grid grid-cols-[1fr_auto] gap-y-2 items-center">
           <div className="row-span-2 flex items-center gap-3 min-w-0 pr-2">
-            <div className="w-9 h-9 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
-              <Wine className="w-5 h-5 text-primary" />
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <WineIcon className="w-5 h-5 text-primary" />
             </div>
             <div className="min-w-0">
               <h1 className="font-heading text-xl font-bold leading-tight truncate">Wine Cellar</h1>

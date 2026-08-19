@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Wine, WineType } from "@/types/wine";
+import { Wine, WineType, DrunkWine } from "@/types/wine";
 import { updateWine } from "@/lib/wines";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,7 +12,7 @@ import { Loader2, Wine as WineIcon } from "lucide-react";
 import { toast } from "sonner";
 
 interface EditWineDialogProps {
-  wine: Wine | (Record<string, any> & { id: string });
+  wine: Wine | DrunkWine;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdated: () => void;

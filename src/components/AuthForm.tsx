@@ -32,8 +32,8 @@ export function AuthForm() {
         await signIn(email, password);
         toast.success("Welcome back!");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Authentication failed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Authentication failed");
     } finally {
       setLoading(false);
     }
@@ -49,8 +49,8 @@ export function AuthForm() {
       await resetPassword(email);
       toast.success("Reset link sent! Check your inbox.");
       setMode("signin");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to send reset link");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send reset link");
     } finally {
       setLoading(false);
     }

@@ -84,9 +84,9 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
         quantity: "1",
       }));
       toast.success("Label scanned! Review the details and save.");
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      toast.error(`Failed to scan: ${err?.message || "Unknown error"}`);
+      toast.error(`Failed to scan: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
       setScanning(false);
       setScanStage(null);
@@ -105,8 +105,8 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
       if (image.base64String) {
         await processImageBase64(image.base64String);
       }
-    } catch (error: any) {
-      if (error.message !== "User cancelled photos app" && error.message !== "User cancelled") {
+    } catch (error) {
+      if (error instanceof Error && error.message !== "User cancelled photos app" && error.message !== "User cancelled") {
         console.error(error);
         toast.error("Failed to open camera");
       }
@@ -125,8 +125,8 @@ export function AddWineDialog({ onAdded, defaultDestination = "cellar" }: AddWin
       if (image.base64String) {
         await processImageBase64(image.base64String);
       }
-    } catch (error: any) {
-      if (error.message !== "User cancelled photos app" && error.message !== "User cancelled") {
+    } catch (error) {
+      if (error instanceof Error && error.message !== "User cancelled photos app" && error.message !== "User cancelled") {
         console.error(error);
         toast.error("Failed to open gallery");
       }

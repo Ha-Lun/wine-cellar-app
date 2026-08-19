@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
-import { WineType } from "@/types/wine";
+import { WineType, DrunkWine } from "@/types/wine";
 import { format } from "date-fns";
 import { Grape, Calendar } from "lucide-react";
 import { WineRatingDialog } from "@/components/WineRatingDialog";
@@ -45,9 +45,9 @@ const WineTypeIcon = ({ type }: { type: WineType }) => {
 const Archive = () => {
   const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
-  const [ratingWine, setRatingWine] = useState<any>(null);
-  const [editWine, setEditWine] = useState<any>(null);
-  const [filteredWines, setFilteredWines] = useState<any[] | null>(null);
+  const [ratingWine, setRatingWine] = useState<DrunkWine | null>(null);
+  const [editWine, setEditWine] = useState<DrunkWine | null>(null);
+  const [filteredWines, setFilteredWines] = useState<DrunkWine[] | null>(null);
 
   const { data: drunkWines = [], isLoading } = useQuery({
     queryKey: ["drunk-wines"],

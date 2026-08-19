@@ -1,12 +1,22 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Filter, X, ChevronDown, ChevronRight } from "lucide-react";
 
-interface WineFiltersProps {
-  wines: any[];
-  onFilteredWines: (filtered: any[]) => void;
+export interface FilterableWine {
+  country?: string | null;
+  region?: string | null;
+  grape_variety?: string | null;
+  vintage?: number | null;
+  drink_from?: number | null;
+  drink_until?: number | null;
+  food_pairings?: string[] | null;
+}
+
+interface WineFiltersProps<T extends FilterableWine = FilterableWine> {
+  wines: T[];
+  onFilteredWines: (filtered: T[]) => void;
 }
 
 type FilterState = {
@@ -20,12 +30,44 @@ type FilterState = {
 
 const emptyFilters: FilterState = { countries: [], regions: [], grapes: [], years: [], drinkTimes: [], foods: [] };
 
-export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
+const foodCategoryMapping: Record<string, string[]> = {
+  "Red Meat": ["beef", "lamb", "veal", "venison", "game", "steak", "red meat"],
+  "Poultry": ["chicken", "poultry", "duck", "turkey"],
+  "Pork": ["pork", "bacon", "ham"],
+  "Seafood": ["fish", "salmon", "tuna", "shellfish", "seafood", "shrimp", "crab"],
+  "Pasta": ["pasta", "spaghetti", "lasagna", "noodles"],
+  "Cheese": ["cheese", "cheddar", "brie", "blue cheese", "parmesan"],
+  "Vegetables": ["vegetarian", "vegetables", "salad", "mushroom", "tomato"],
+  "Spicy": ["spicy", "curry", "chili"],
+  "Dessert": ["dessert", "sweet", "chocolate", "cake", "fruit"],
+  "Cured Meat": ["cured meat", "charcuterie", "salami", "prosciutto"]
+};
+
+function getFoodCategories(foodPairings: string[] | undefined | null): string[] {
+  if (!foodPairings || foodPairings.length === 0) return [];
+  const categories = new Set<string>();
+  for (const food of foodPairings) {
+    const lowerFood = food.toLowerCase();
+    let matched = false;
+    for (const [category, keywords] of Object.entries(foodCategoryMapping)) {
+      if (keywords.some(kw => lowerFood.includes(kw))) {
+        categories.add(category);
+        matched = true;
+      }
+    }
+    if (!matched) {
+      categories.add("Other");
+    }
+  }
+  return Array.from(categories);
+}
+
+export function WineFilters<T extends FilterableWine>({ wines, onFilteredWines }: WineFiltersProps<T>) {
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
   const [open, setOpen] = useState(false);
   const [expandedCountries, setExpandedCountries] = useState<string[]>([]);
 
-  const getDrinkTime = (w: any) => {
+  const getDrinkTime = (w: FilterableWine) => {
     const currentYear = new Date().getFullYear();
     if (!w.drink_from && !w.drink_until) return "Unknown";
     if (w.drink_until && w.drink_until < currentYear) return "Past peak";
@@ -34,12 +76,14 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
   };
 
   // Extract unique values
-  const countries = [...new Set(wines.map((w) => w.country).filter(Boolean))].sort();
-  const grapes = [...new Set(wines.map((w) => w.grape_variety).filter(Boolean))].sort();
-  const years = [...new Set(wines.map((w) => w.vintage).filter(Boolean))].sort((a, b) => b - a);
+  const countries = [...new Set(wines.map((w) => w.country).filter((c): c is string => Boolean(c)))].sort();
+  const grapes = [...new Set(wines.map((w) => w.grape_variety).filter((g): g is string => Boolean(g)))].sort();
+  const years = [...new Set(wines.map((w) => w.vintage).filter((y): y is number => Boolean(y)))].sort((a, b) => b - a);
   const allDrinkTimes = [...new Set(wines.map(getDrinkTime))];
   const drinkTimes = ["Drink now", "Wait", "Past peak", "Unknown"].filter(t => allDrinkTimes.includes(t));
-  const foods = [...new Set(wines.flatMap((w) => w.food_pairings ?? []).filter(Boolean))].sort();
+  
+  const allFoods = wines.flatMap((w) => getFoodCategories(w.food_pairings));
+  const foods = [...new Set(allFoods)].sort();
 
   // Build country -> regions mapping
   const regionsByCountry: Record<string, string[]> = {};
@@ -60,29 +104,30 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
     setFilters(next);
     let result = wines;
     if (next.countries.length)
-      result = result.filter((w) => next.countries.includes(w.country));
+      result = result.filter((w) => w.country && next.countries.includes(w.country));
     if (next.regions.length)
-      result = result.filter((w) => next.regions.includes(w.region));
+      result = result.filter((w) => w.region && next.regions.includes(w.region));
     if (next.grapes.length)
-      result = result.filter((w) => next.grapes.includes(w.grape_variety));
+      result = result.filter((w) => w.grape_variety && next.grapes.includes(w.grape_variety));
     if (next.years.length)
-      result = result.filter((w) => next.years.includes(w.vintage));
+      result = result.filter((w) => w.vintage && next.years.includes(w.vintage));
     if (next.drinkTimes.length)
       result = result.filter((w) => next.drinkTimes.includes(getDrinkTime(w)));
     if (next.foods.length)
-      result = result.filter((w) =>
-        w.food_pairings?.some((f: string) => next.foods.includes(f))
-      );
+      result = result.filter((w) => {
+        const cats = getFoodCategories(w.food_pairings);
+        return cats.some((c) => next.foods.includes(c));
+      });
     onFilteredWines(result);
   };
 
 
   const toggle = (key: keyof FilterState, value: string | number) => {
-    const arr = filters[key] as any[];
-    const next = {
+    const arr = filters[key] as Array<string | number>;
+    const next: FilterState = {
       ...filters,
       [key]: arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value],
-    };
+    } as FilterState;
     apply(next);
   };
 
@@ -135,11 +180,11 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5">
-          <Filter className="w-3.5 h-3.5" />
-          Filters
+        <Button variant="outline" size="sm" className="gap-1.5 relative w-[105px] justify-start pl-3">
+          <Filter className="w-3.5 h-3.5 shrink-0" />
+          <span>Filters</span>
           {activeCount > 0 && (
-            <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
+            <Badge className="absolute right-1.5 h-5 w-5 p-0 flex items-center justify-center text-[10px] bg-primary">
               {activeCount}
             </Badge>
           )}
@@ -227,3 +272,4 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
     </Popover>
   );
 }
+
