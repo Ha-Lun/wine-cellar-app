@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Filter, X, ChevronDown, ChevronRight } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface WineFiltersProps {
   wines: any[];
@@ -15,20 +14,31 @@ type FilterState = {
   regions: string[];
   grapes: string[];
   years: number[];
+  drinkTimes: string[];
   foods: string[];
 };
 
-const emptyFilters: FilterState = { countries: [], regions: [], grapes: [], years: [], foods: [] };
+const emptyFilters: FilterState = { countries: [], regions: [], grapes: [], years: [], drinkTimes: [], foods: [] };
 
 export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
   const [open, setOpen] = useState(false);
   const [expandedCountries, setExpandedCountries] = useState<string[]>([]);
 
+  const getDrinkTime = (w: any) => {
+    const currentYear = new Date().getFullYear();
+    if (!w.drink_from && !w.drink_until) return "Unknown";
+    if (w.drink_until && w.drink_until < currentYear) return "Past peak";
+    if (w.drink_from && w.drink_from > currentYear) return "Wait";
+    return "Drink now";
+  };
+
   // Extract unique values
   const countries = [...new Set(wines.map((w) => w.country).filter(Boolean))].sort();
   const grapes = [...new Set(wines.map((w) => w.grape_variety).filter(Boolean))].sort();
   const years = [...new Set(wines.map((w) => w.vintage).filter(Boolean))].sort((a, b) => b - a);
+  const allDrinkTimes = [...new Set(wines.map(getDrinkTime))];
+  const drinkTimes = ["Drink now", "Wait", "Past peak", "Unknown"].filter(t => allDrinkTimes.includes(t));
   const foods = [...new Set(wines.flatMap((w) => w.food_pairings ?? []).filter(Boolean))].sort();
 
   // Build country -> regions mapping
@@ -44,7 +54,7 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
   Object.keys(regionsByCountry).forEach((c) => regionsByCountry[c].sort());
 
   const activeCount =
-    filters.countries.length + filters.regions.length + filters.grapes.length + filters.years.length + filters.foods.length;
+    filters.countries.length + filters.regions.length + filters.grapes.length + filters.years.length + filters.drinkTimes.length + filters.foods.length;
 
   const apply = (next: FilterState) => {
     setFilters(next);
@@ -57,6 +67,8 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
       result = result.filter((w) => next.grapes.includes(w.grape_variety));
     if (next.years.length)
       result = result.filter((w) => next.years.includes(w.vintage));
+    if (next.drinkTimes.length)
+      result = result.filter((w) => next.drinkTimes.includes(getDrinkTime(w)));
     if (next.foods.length)
       result = result.filter((w) =>
         w.food_pairings?.some((f: string) => next.foods.includes(f))
@@ -142,7 +154,7 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
             </button>
           )}
         </div>
-        <ScrollArea className="max-h-80">
+        <div className="max-h-80 overflow-y-auto">
           <div className="p-4 space-y-4">
 
             {/* Country with nested regions */}
@@ -207,9 +219,10 @@ export function WineFilters({ wines, onFilteredWines }: WineFiltersProps) {
             )}
             <ChipList label="Grape" items={grapes} selected={filters.grapes} filterKey="grapes" />
             <ChipList label="Year" items={years} selected={filters.years} filterKey="years" />
+            <ChipList label="Time to drink" items={drinkTimes} selected={filters.drinkTimes} filterKey="drinkTimes" />
             <ChipList label="Food pairing" items={foods} selected={filters.foods} filterKey="foods" />
           </div>
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   );
