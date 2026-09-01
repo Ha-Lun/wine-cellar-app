@@ -79,7 +79,7 @@ export function WineFilters<T extends FilterableWine>({ wines, onFilteredWines }
   const countries = [...new Set(wines.map((w) => w.country).filter((c): c is string => Boolean(c)))].sort();
   const grapes = [...new Set(wines.map((w) => w.grape_variety).filter((g): g is string => Boolean(g)))].sort();
   const years = [...new Set(wines.map((w) => w.vintage).filter((y): y is number => Boolean(y)))].sort((a, b) => b - a);
-  const allDrinkTimes = [...new Set(wines.map(getDrinkTime))];
+  const allDrinkTimes: string[] = [...new Set(wines.map(getDrinkTime))];
   const drinkTimes = ["Drink now", "Wait", "Past peak", "Unknown"].filter(t => allDrinkTimes.includes(t));
   
   const allFoods = wines.flatMap((w) => getFoodCategories(w.food_pairings));

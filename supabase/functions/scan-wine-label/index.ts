@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const MODEL = "qwen/qwen3.6-27b";
+const MODEL = "qwen/qwen3.8-27b";
 
 const SYSTEM_PROMPT = `You are a world-class wine expert and sommelier with encyclopedic knowledge of wines worldwide.
 Analyze the provided wine label image and return ONLY a JSON object (no prose, no markdown fences) matching this schema:
