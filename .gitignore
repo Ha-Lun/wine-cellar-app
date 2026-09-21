@@ -25,3 +25,5 @@ dist-ssr
 
 # Ignore all built app releases and their variations
 android/app/release/
+
+google-play-key.json
